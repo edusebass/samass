@@ -1,0 +1,366 @@
+a:link {
+    color: #5C6872; /* Colore dei link non visitati*/ 
+    text-decoration: none; /* Rimuove la sottolineatura dai link */
+}
+a:visited {
+    color: #5C6872; /* Colore dei link visitati */
+    text-decoration: none; /* Rimuove la sottolineatura dai link*/ 
+}
+a:hover {
+    color: #5C6872; /* Colore dei link al passaggio del mouse */
+    text-decoration: none; /* Rimuove la sottolineatura dai link */
+}
+a:active {
+    color: #5C6872; /* Colore dei link attivi */
+    text-decoration: none; /* Rimuove la sottolineatura dai link*/
+}
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Lato', sans-serif;
+}
+/*Tipografía*/
+.lato-thin {
+    font-family: "Lato", serif;
+    font-weight: 100;
+    font-style: normal;
+  }
+  
+  .lato-light {
+    font-family: "Lato", serif;
+    font-weight: 300;
+    font-style: normal;
+  }
+  
+  .lato-regular {
+    font-family: "Lato", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  .lato-bold {
+    font-family: "Lato", serif;
+    font-weight: 700;
+    font-style: normal;
+  }
+  
+  .lato-black {
+    font-family: "Lato", serif;
+    font-weight: 900;
+    font-style: normal;
+  }
+  
+  .lato-thin-italic {
+    font-family: "Lato", serif;
+    font-weight: 100;
+    font-style: italic;
+  }
+  
+  .lato-light-italic {
+    font-family: "Lato", serif;
+    font-weight: 300;
+    font-style: italic;
+  }
+  
+  .lato-regular-italic {
+    font-family: "Lato", serif;
+    font-weight: 400;
+    font-style: italic;
+  }
+  
+  .lato-bold-italic {
+    font-family: "Lato", serif;
+    font-weight: 700;
+    font-style: italic;
+  }
+  
+  .lato-black-italic {
+    font-family: "Lato", serif;
+    font-weight: 900;
+    font-style: italic;
+  }
+  
+/*.tx {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: left;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+*/
+.login-form { 
+    width: 300px; 
+    margin: 50px auto; 
+    padding: 20px; 
+    border: 1px solid #ddd; 
+}
+.login-form input[type="text"], 
+.login-form input[type="password"] { 
+    width: 80%; 
+    padding: 10px; 
+    margin: 10px 0; 
+}
+.login-form input[type="submit"] { 
+    width: 100%; 
+    padding: 10px; 
+    background-color: #FF7514; 
+    color: white; 
+    border: none; 
+}
+.error { 
+    color: red; 
+}
+
+/*Tables*/
+table {
+   /*border-collapse: collapse; */
+    width: 100%;
+    margin: auto;
+    padding: 0%;
+    border-collapse: collapse;
+}
+.rounded-table {
+    border-collapse: collapse; /* Rimuove gli spazi tra le celle */
+    width: 100%;
+    border: 1px solid chocolate;
+    border-radius: 10px; /* Aggiungi bordi arrotondati al tavolo */
+    overflow: hidden; /* Assicurati che i bordi arrotondati appaiano correttamente */
+}
+.rounded-table th, .rounded-table td {
+    border: 1px solid chocolate; /* Bordo per le celle */
+    padding: 8px;
+    text-align: left;
+}
+.rounded-table th:first-child, .rounded-table td:first-child {
+    border-top-left-radius: 10px; /* Arrotonda l'angolo in alto a sinistra */
+    border-bottom-left-radius: 10px; /* Arrotonda l'angolo in basso a sinistra */
+}
+.rounded-table th:last-child, .rounded-table td:last-child {
+    border-top-right-radius: 10px; /* Arrotonda l'angolo in alto a destra */
+    border-bottom-right-radius: 10px; /* Arrotonda l'angolo in basso a destra */
+}
+.roundedTable {
+    border-collapse: collapse;
+    border-radius: 1.2em;
+    width: 100%;
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.content {
+    flex: 1;
+}
+
+/*Footer Styles*/
+
+footer {
+    text-align: center;
+    color: #616162;
+    width: 100%;
+   
+}
+.footer img.f-left {
+    height: 60px;
+    width: 120px; 
+}
+.footer img.f-right {
+    height: 30px; 
+    width: auto;
+    margin-left: 10px;
+}
+/*Header styles*/
+.header {
+    padding: 10px;
+    text-align: center;
+    position: relative;
+    color: white;
+}
+.header img.left {
+    position: absolute;
+    left: 10px;
+    height: 30px; 
+    top: 50%;
+    transform: translateY(-50%);
+}
+.header img.right {
+    position: absolute;
+    right: 10px;
+    height: 30px; 
+    top: 50%;
+    transform: translateY(-50%);
+}
+.header .text-container {
+    display: inline-block;
+    text-align: center;
+}
+.header .text-container h1, 
+.header .text-container h2, 
+.header .text-container h3 {
+    margin: 5px;
+}
+.header-user {
+    height:100px;
+}
+.btns-user {
+    float:right;
+    text-align: right;
+    height:44.8px;
+    align-content: center;
+}
+
+/*Grupo de botones/inventario*/
+.button-icon{
+    width: 20px; 
+    height: 20px; 
+    margin-right: 5px;
+}
+/*clase para icono de asamblea*/
+.button-icon-co{
+    width: 40px; 
+    height: 23px; 
+    margin: right 0;
+}
+
+/*Colores frecuentes*/
+.bg-chocolate {
+    background-color: chocolate;
+}
+.bg-plomo {
+    background-color: #e8ecf2;
+}
+.text-color{
+    color:#5C6872;
+}
+.text-color-bold{
+    color:#5C6872 ; 
+    font-weight:bold !important;
+}
+
+/*Estilos de cajas*/
+.border-default{
+    border: solid 2px #E4640D;
+    border-radius: 15px; 
+}
+
+body { 
+    margin: 0; padding: 0; font-family: Arial, sans-serif;
+ }
+.header-table { 
+    width: 100%; border-collapse: collapse; 
+}
+.header-table td { 
+    padding: 5px; 
+}
+/*Listas de documentos*/
+.py-adm-list-style { 
+    padding-top: 0.26rem!important;
+    padding-bottom: 0.26rem!important; 
+} 
+.list-docs{
+    list-style-type:none;
+    list-style-image:image("/public/ico/pdf.svg")
+}
+
+/*Tabla regional.php Asistencia*/
+.no-interlineado { line-height: 10%; /* mínimo*/ 
+} 
+.interlineado { line-height: normal; /* Mantiene el interlineado normal*/
+}
+
+
+/* General Bootstrap overrides and custom styles 
+.bg-light {
+    background-color: #e8ecf2 !important;
+}
+
+.font-weight-bold {
+    font-weight: bold !important;
+}
+
+.text-large {
+    font-size: large !important;
+}
+
+.text-muted {
+    color: #666768 !important;
+}
+
+.py-3 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.d-inline-block {
+    display: inline-block !important;
+}
+
+.mr-3 {
+    margin-right: 1rem !important;
+}
+*/
+
+@media (max-width: 767px) {
+    .header-user {
+        height:150px;
+    }
+    .btns-user {
+        margin: auto;
+        text-align-last: center;
+    }
+}
+@media (min-width: 576px) {
+    .custom-btn {
+        padding-left: 0.5rem; /* px-sm-2 */
+        padding-right: 0.5rem; /* px-sm-2 */
+    }
+}
+
+@media (min-width: 768px) {
+    .custom-btn {
+        padding-top: 0.5rem; /* py-md-2 */
+        padding-bottom: 0.5rem; /* py-md-2 */
+        padding-left: 0.75rem; /* px-md-3 */
+        padding-right: 0.75rem; /* px-md-3 */
+    }
+}
+
+/* ESCANER GESTION BODEGA */
+
+#qrScannerContainer {
+    position: fixed;
+    top: 50px; /* Ajusta el valor según donde quieras que aparezca */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%; /* Ajusta el tamaño si es necesario */
+    max-width: 600px; /* Limitar el tamaño máximo */
+    z-index: 1050; /* Asegúrate de que esté por encima de otros elementos */
+    background-color: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  @media screen and (min-width: 768px) {
+    #qrScannerContainer {
+      position: fixed;
+      top: 20px; /* Ajusta el valor si lo necesitas */
+      left: 50%; /* Colocamos el contenedor un poco más a la izquierda */
+      transform: translateX(-50%);
+      width: 30%; /* Tamaño más pequeño en pantallas grandes */
+      max-width: 400px; /* Limita aún más el tamaño */
+      z-index: 1050; /* Asegúrate de que esté por encima de otros elementos */
+  
+      border-radius: 15px; /* Borde más redondeado */
+      padding: 20px; /* Aumenta el padding */
+    }
+  }
+  

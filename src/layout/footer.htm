@@ -1,0 +1,29 @@
+<footer class="container-fluid footer mt-2">
+    <div class="row">
+         <img src="/public/ico/LDC.png" class="f-left img-fluid" alt="ECU/LDC"/>
+    </div>
+    <div class="row d-flex flex-row-reverse bg-plomo py-3">
+        <div class="col-auto">
+            <a href="helpdesk.php">
+            <img src="/public/ico/helpdek.png" class="f-right img-fluid" alt="Icono de soporte técnico">
+            </a>
+        </div>
+        <div class="col-auto">
+            <time id="current-date" class="mr-3" style="font-weight: bold;"></time>
+        </div>
+    </div>   
+</footer>
+
+<script>    function updateDate() {
+    const dateElement = document.getElementById('current-date');
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+    dateElement.textContent = formattedDate;
+}
+updateDate();
+setInterval(updateDate, 60000); // Actualiza cada minuto
+</script>

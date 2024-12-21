@@ -1,0 +1,42 @@
+.container {
+    padding-left: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 5rem;
+}
+.border-default{
+    border: solid 2px #E4640D;
+    border-radius: 15px; 
+}
+.custom-label label{
+    color:#5C6872;
+}
+.text-color-bold{
+    color:#5C6872; 
+    font-weight:bold;
+}
+.container {
+    padding-left: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 5rem;
+}
+
+#qrContentDisplay {
+    transition: background-color 0.5s ease;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+#qrScannerContainer {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    #qrScannerFrame {
+        height: 300px;
+    }
+}
