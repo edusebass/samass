@@ -9,7 +9,7 @@ require './../layout/head.html';
 protegerPagina("gestionBodega.php");
 
 // Inicialización de variables
-$error_mensaje = $nombre_voluntario = $descripcion_producto = $check_mensaje = "";
+$error_mensaje = $nombre_voluntario = $descripcion_producto = $cantidad_pedida = $cantidad_sobrante = $check_mensaje = "";
 $mostrar_codigo = $mostrar_escaner = $mostrar_descripcion_producto = $mostrar_devolucion_producto = $mostrar_devolucion_material = $isMostrarInputCandtidad = false;
 $productos_asignados = [];
 $materiales_asignados = [];
@@ -151,7 +151,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 function guardar_material($conn, $codigo_material, $voluntario_id, $cantidad_material_asignacion) {
-    
     $error_mensaje = "Código QR materiallll";
     $query_obtener_producto = "SELECT m.mat_descripcion, m.mat_cantidad 
     FROM materiales m
@@ -161,8 +160,6 @@ function guardar_material($conn, $codigo_material, $voluntario_id, $cantidad_mat
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) {
         $_SESSION['codigo_item'] = $_SESSION['qr_content'];
-        // $descripcion_producto = "{$row['nombre']}: {$row['descripccion']}";
-        // $cantidad_disponible = $row['cantidad'];
 
         // Verificar asignación previa
         $query_asignado = "SELECT COUNT(*) FROM operaciones 
@@ -170,8 +167,6 @@ function guardar_material($conn, $codigo_material, $voluntario_id, $cantidad_mat
         AND fechaentrada IS NULL";
         $material_asignado = ejecutar_query($conn, $query_asignado, [$_SESSION['qr_content']])->fetchColumn();
         if ($material_asignado == 0) {
-            // $mostrar_descripcion_producto = true;
-            // $descripcion_producto .= " (Disponibles: $cantidad_disponible)";
 
             //insertar item logica
             $query_obtener_material_id = "SELECT id_materiales FROM materiales WHERE codigo = ?";
@@ -218,8 +213,41 @@ function guardar_material($conn, $codigo_material, $voluntario_id, $cantidad_mat
 
 if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
     if (strpos($_SESSION['qr_content'], 'mat') === 0) { //LOGICA CUANDO ES MATERIAL
-        //la idea es que cuando lea se abra el caudro en vez de herrmientas o materila seccion de devoluciones por eligar la contaida y asingar
-        $isMostrarInputCandtidad = true;
+
+        $query = "SELECT mat_cantidad FROM materiales WHERE id_materiales = ?";
+        $cantidad_sobrante = ejecutar_query($conn, $query, [$_SESSION['qr_content']])->fetchColumn();
+
+        $query_cantidapedida = "SELECT cantidad FROM operaciones WHERE itemid = ? AND voluntarioid = ? AND fechaentrada IS NULL";
+        $cantidad_pedida = ejecutar_query($conn, $query_cantidapedida, [$_SESSION['qr_content'], $_SESSION['id_voluntario']])->fetchColumn();
+
+        $query_obtener_producto = "SELECT m.mat_descripcion, m.mat_cantidad 
+        FROM materiales m
+        WHERE m.codigo = ?";
+    
+        $stmt = ejecutar_query($conn, $query_obtener_producto, [$_SESSION['qr_content']]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $descripcion_producto = "{$row['mat_descripcion']}";
+        $query_asignado_previo = "SELECT COUNT(*) FROM operaciones 
+                WHERE itemid = (SELECT id_materiales FROM materiales WHERE codigo = ?)
+                AND fechaentrada IS NULL 
+                AND voluntarioid = ?";
+            $item_asignado_a_voluntario = ejecutar_query($conn, $query_asignado_previo, 
+            [$_SESSION['qr_content'], $_SESSION['id_voluntario']])->fetchColumn();
+
+        $query_voluntario_del_producto = "SELECT voluntarioid  FROM operaciones 
+        WHERE itemid = (SELECT id_materiales FROM materiales WHERE codigo = ?)
+        AND fechaentrada IS NULL ";
+
+        $voluntarioid_del_material = ejecutar_query($conn, $query_voluntario_del_producto,[$_SESSION['qr_content']])->fetchColumn();
+
+        if ($item_asignado_a_voluntario == 1) {
+            $error_mensaje = "Este item ya ha sido asignado a este voluntario ." . $voluntarioid_del_material . " tiene la opcion de devolverlo";
+            $mostrar_devolucion_material = true;
+        } else if ($voluntarioid_del_material) {
+            $error_mensaje = "Este item le pertenece a " . $voluntarioid_del_material;
+        } else {
+            $isMostrarInputCandtidad = true;
+        }
 
     } else { //LOGICA CUANDO ES UNA HERRAMIENTA
         // Solo procesar el código QR cuando se haya escaneado
@@ -309,6 +337,8 @@ if (isset($_POST['reiniciar']) && $_POST['reiniciar'] == 'true') {
     $error_mensaje = '';
     $nombre_voluntario = '';
     $descripcion_producto = '';
+    $cantidad_pedida = ''; 
+    $cantidad_sobrante = '';
     $check_mensaje = '';
     $mostrar_codigo = false;
     $mostrar_escaner = false;
@@ -338,6 +368,8 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
     $productos_asignados = [];
     $materiales_asignados = [];
 }
+
+
 
 ?>
     <title>SAM Assistant</title>
@@ -413,7 +445,10 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                     </div>
                                     <form method="post" >
                                         <div class="row gy-2 gx-3 align-items-center">
-                                            <p style="color:#5C6872; font-weight:bold;"><?php echo htmlspecialchars($descripcion_producto); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Material: <?php echo htmlspecialchars($descripcion_producto); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Cantidad disponible: <?php echo htmlspecialchars($cantidad_sobrante); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Codigo: <?php echo htmlspecialchars($_SESSION['qr_content']); ?></p>
+
                                             <div class="mb-3">
                                                 <label for="cantidad_material_asignacion" class="form-label">Cantidad requeridad:</label>
                                                 <input type="number" class="form-control" id="cantidad_material_asignacion" name="cantidad_material_asignacion" min="1" required>
@@ -439,11 +474,12 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                                     Devolver ítem
                                                 </h2>
                                             </div>
-                                            <p style="color:#5C6872; font-weight:bold;"><?php echo htmlspecialchars($descripcion_producto); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Herramienta: <?php echo htmlspecialchars($descripcion_producto); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Codigo: <?php echo htmlspecialchars($_SESSION['qr_content']); ?></p>
                                             <div class="modal-body">
                                                 <p>Por favor, indique si el ítem está limpio o no. Si lo esta de en CONFIRMAR</p>
                                             
-                                            <button type="submit" class="btn btn-primary" name="confirmar_devolucion">Confirmar</button>
+                                            <button type="submit" class="btn btn-primary" name="confirmar_devolucion">Confirmar</button>km
                                         </div>
                                     </form>
                                 <?php endif; ?>
@@ -462,7 +498,11 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                                 <h2>Devolver material</h2>
                                             </div>
                                             
-                                            <p style="color:#5C6872; font-weight:bold;"><?php echo htmlspecialchars($descripcion_producto); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Material: <?php echo htmlspecialchars($descripcion_producto); ?></p>
+                                            <p style="color:#5C6872; font-weight:bold;">Cantidad pedida: <?php echo htmlspecialchars($cantidad_pedida); ?></p>
+
+                                            <p style="color:#5C6872; font-weight:bold;">Codigo: <?php echo htmlspecialchars($_SESSION['qr_content']); ?></p>
+
                                             <div class="modal-body">
                                                 <p>Por favor, indique si el ítem está limpio o no. Si lo está, dé en CONFIRMAR</p>
                                                 <div class="mb-3">
