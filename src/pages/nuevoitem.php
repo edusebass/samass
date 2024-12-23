@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_item'])) {
             // Generar UUID
             $uuid = uniqid();
             // Concatenar mat_descripcion con UUID
-            $id_materiales = 'mat_' . $_POST['mat_descripcion'] . '_' . $uuid;
+            $id_materiales = 'mat_' . $uuid;
             // Generar QR para materiales usando id_materiales como código
             $qrCode = $id_materiales;
             $qrImagePath = './../../docs/qr_codes/material_' . $id_materiales . '.png';
