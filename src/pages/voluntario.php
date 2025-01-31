@@ -18,7 +18,7 @@ function ejecutar_query($conn, $query, $params = []) {
 }
 
 function obtener_productos_asignados($conn, $id_voluntario) {
-    $query = "SELECT o.itemid, i.nombre, i.descripccion, o.cantidad, o.fechasalida 
+    $query = "SELECT o.itemid, i.nombre, i.descripcion, o.cantidad, o.fechasalida 
               FROM operaciones o 
               JOIN items i ON o.itemid = i.iditems 
               WHERE o.voluntarioid = ? AND o.fechaentrada IS NULL

@@ -19,7 +19,7 @@ unset($_SESSION['codigo_item']);
 <title>SAM Assistant</title>
 </head>
 <body>
-<dv class="container-fluid">
+<div class="container-fluid">
     <div class="row mb-3">
         <div class="col-md-6"> 
             <div class="w-100 bg-plomo mb-2 p-1"><b>BODEGA</b></div>
@@ -60,7 +60,7 @@ unset($_SESSION['codigo_item']);
                 <div class="card rounded-4 p-2">
                     <div class="row mt-3 p-1 justify-content-around align-items-center text-center">
                         <div class="col-sm-6 col-md-3 ">
-                            <a class="w-100 p-3" href="usuarios.php"> 
+                            <a class="w-100 p-3" href="compras.php"> 
                                 <img class="m-auto" src="/public/ico/compras.svg" style="height:auto; max-height: 100px; width: 100%; max-width: 100px; min-width:60px;">
                                 <h5>Pedido</h5>
                             </a>
@@ -115,7 +115,7 @@ unset($_SESSION['codigo_item']);
             </div>  
         </div>
     </div>
-
+</div>
 
 <?php
 require './../layout/footer.htm';

@@ -18,7 +18,7 @@ require './../utils/session_check.php';
         <tr>
             <th>ID</th>
             <th>NOMBRE</th>
-            <th>DESCRIPCCION</th>
+            <th>DESCRIPCIÓN</th>
             <th>ESTADO</th>
         </tr>
         
@@ -41,7 +41,7 @@ $t = 0;
         echo "<tr><td>"
         .$row['iditems']."</td><td>"
         .$row['nombre']."</td><td>"
-        .$row['descripccion']."</td><td>"
+        .$row['descripcion']."</td><td>"
         .$row['estado']."</td><td>"
         .$row['cantidad']."</td>
         </tr>";

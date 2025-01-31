@@ -28,7 +28,7 @@ function obtener_productos_asignados($conn, $id_voluntario) {
     $query = "SELECT o.itemid, 
                      i.nombre,
                      i.codigo, 
-                     i.descripccion, 
+                     i.descripcion, 
                      1 AS cantidad,
                      o.fechasalida
               FROM operaciones o 
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
     // Solo procesar el código QR cuando se haya escaneado
-    $query_obtener_producto = "SELECT i.nombre, i.descripccion, i.cantidad 
+    $query_obtener_producto = "SELECT i.nombre, i.descripcion, i.cantidad 
                               FROM items i
                               WHERE i.codigo = ?";
     
@@ -114,7 +114,7 @@ if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
     
     if ($row) {
         $_SESSION['codigo_item'] = $_SESSION['qr_content'];
-        $descripcion_producto = "{$row['nombre']}: {$row['descripccion']}";
+        $descripcion_producto = "{$row['nombre']}: {$row['descripcion']}";
         $cantidad_disponible = $row['cantidad'];
         
         // Verificar asignación previa

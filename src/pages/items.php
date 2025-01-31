@@ -19,7 +19,7 @@ require './../utils/session_check.php';
         <tr>
             <th>ID</th>
             <th>NOMBRE</th>
-            <th>DESCRIPCCION</th>
+            <th>DESCRIPCIÓN</th>
             <th>CANTIDAD</th>
             <th>ESTADO</th>
             <?php
@@ -55,7 +55,7 @@ $t = 0;
         echo "<tr><td>"
         .$row['iditems']."</td><td>"
         .$row['nombre']."</td><td>"
-        .$row['descripccion']."</td><td>"
+        .$row['descripcion']."</td><td>"
         .$row['cantidad']."</td><td>"
         .$row['estado']."</td><td  style='text-align:center;'>";
         if ($codigo == 'ADM') {

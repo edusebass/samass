@@ -28,7 +28,7 @@ function obtener_productos_asignados($conn, $id_voluntario) {
     $query = "SELECT o.itemid, 
                      i.nombre,
                      i.codigo, 
-                     i.descripccion, 
+                     i.descripcion, 
                      1 AS cantidad,
                      o.fechasalida
               FROM operaciones o 
@@ -61,7 +61,7 @@ function obtener_nombre_voluntario($conn, $id_voluntario) {
 function devolver_producto($conn, $item_codigo_qr, $voluntario_id, $cantidad_material_devolucion) {
     $conn->beginTransaction();
     try {
-        if (strpos($_SESSION['qr_content'], 'mat') === 0) {
+        if (strpos($_SESSION['qr_content'], 'M') === 0) {
             // Obtener el id del item en base al codigo qr
             $query_obtener_id = "SELECT id_materiales FROM materiales WHERE codigo = ?";
             $id_material = ejecutar_query($conn, $query_obtener_id,[$item_codigo_qr])->fetch(PDO::FETCH_ASSOC);
@@ -75,17 +75,6 @@ function devolver_producto($conn, $item_codigo_qr, $voluntario_id, $cantidad_mat
             // Actualizar la cantidad en la tabla materiales peidr la cantidad de materiales a devolver
             $query_update_material = "UPDATE materiales SET mat_cantidad = mat_cantidad + ? WHERE id_materiales = ?";
             ejecutar_query($conn, $query_update_material, [ $cantidad_material_devolucion,  $id_material['id_materiales']]);
-
-            // // Calcular el tiempo de uso **
-            // $query_calculo_uso =  "SELECT TIMESTAMPDIFF(MINUTE, fechasalida, fechaentrada) AS minutos_diferencia
-            //                         FROM operaciones
-            //                         WHERE itemid = ? AND voluntarioid = ? ";
-            // $resultado_uso = ejecutar_query($conn, $query_calculo_uso, [ $id_material['id_materiales'], $voluntario_id,]);
-            // $minutos_uso = $resultado_uso->fetchColumn();
-            // if ($minutos_uso !== false) {
-            //     $query_actualizar_uso = "UPDATE items SET uso = uso + ? WHERE iditems = ?";
-            //     ejecutar_query($conn, $query_actualizar_uso, [$minutos_uso,  $id_material['id_materiales']]);
-            // }
 
         } else {
             // Obtener el id del item en base al codigo qr
@@ -114,6 +103,7 @@ function devolver_producto($conn, $item_codigo_qr, $voluntario_id, $cantidad_mat
             }
         }
         $conn->commit();
+        $_SESSION['abrir_escaner'] = true;
     } catch (Exception $e) {
         $conn->rollBack();
         return false;
@@ -182,7 +172,8 @@ function guardar_material($conn, $codigo_material, $voluntario_id, $cantidad_mat
 
             // Resetea el contenido del QR después de procesar el ítem
             unset($_SESSION['qr_content']);
-            $mostrar_escaner = false;
+            $_SESSION['abrir_escaner'] = true; // Establecer la variable de sesión para abrir el escáner
+            $mostrar_escaner = true;
 
         } elseif ($material_asignado == 1) {
             $query_asignado_previo = "SELECT COUNT(*) FROM operaciones 
@@ -199,20 +190,21 @@ function guardar_material($conn, $codigo_material, $voluntario_id, $cantidad_mat
             $voluntarioid_del_material = ejecutar_query($conn, $query_voluntario_del_producto,[$_SESSION['qr_content']])->fetchColumn();
 
             if ($item_asignado_a_voluntario == 1) {
-                $error_mensaje = "Este item ya ha sido asignado a este voluntario ." . $voluntarioid_del_material . " tiene la opcion de devolverlo";
+                $error_mensaje = "Este material ya ha sido asignado a este voluntario " . $voluntarioid_del_material . " tiene la opcion de devolverlo";
                 $mostrar_devolucion_material = true;
             } else {
                 $error_mensaje = "Este item le pertenece a " . $voluntarioid_del_material;
             }
         }
     } else {
-        $error_mensaje = "Código QR no encontrado.";
+        $error_mensaje = "Herramienta no encontrada.";
     }
 
 }
 
 if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
-    if (strpos($_SESSION['qr_content'], 'mat') === 0) { //LOGICA CUANDO ES MATERIAL
+    if (strpos($_SESSION['qr_content'], 'M') === 0) { //LOGICA CUANDO ES MATERIAL
+        error_log($_SESSION['qr_content']);
 
         $query = "SELECT mat_cantidad FROM materiales WHERE id_materiales = ?";
         $cantidad_sobrante = ejecutar_query($conn, $query, [$_SESSION['qr_content']])->fetchColumn();
@@ -220,38 +212,43 @@ if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
         $query_cantidapedida = "SELECT cantidad FROM operaciones WHERE itemid = ? AND voluntarioid = ? AND fechaentrada IS NULL";
         $cantidad_pedida = ejecutar_query($conn, $query_cantidapedida, [$_SESSION['qr_content'], $_SESSION['id_voluntario']])->fetchColumn();
 
-        $query_obtener_producto = "SELECT m.mat_descripcion, m.mat_cantidad 
+        $query_obtener_producto = "SELECT m.mat_nombre, m.mat_descripcion, m.mat_cantidad 
         FROM materiales m
         WHERE m.codigo = ?";
     
         $stmt = ejecutar_query($conn, $query_obtener_producto, [$_SESSION['qr_content']]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $descripcion_producto = "{$row['mat_descripcion']}";
-        $query_asignado_previo = "SELECT COUNT(*) FROM operaciones 
-                WHERE itemid = (SELECT id_materiales FROM materiales WHERE codigo = ?)
-                AND fechaentrada IS NULL 
-                AND voluntarioid = ?";
-            $item_asignado_a_voluntario = ejecutar_query($conn, $query_asignado_previo, 
-            [$_SESSION['qr_content'], $_SESSION['id_voluntario']])->fetchColumn();
 
-        $query_voluntario_del_producto = "SELECT voluntarioid  FROM operaciones 
-        WHERE itemid = (SELECT id_materiales FROM materiales WHERE codigo = ?)
-        AND fechaentrada IS NULL ";
-
-        $voluntarioid_del_material = ejecutar_query($conn, $query_voluntario_del_producto,[$_SESSION['qr_content']])->fetchColumn();
-
-        if ($item_asignado_a_voluntario == 1) {
-            $error_mensaje = "Este item ya ha sido asignado a este voluntario ." . $voluntarioid_del_material . " tiene la opcion de devolverlo";
-            $mostrar_devolucion_material = true;
-        } else if ($voluntarioid_del_material) {
-            $error_mensaje = "Este item le pertenece a " . $voluntarioid_del_material;
+        if ($row) {
+            $descripcion_producto = $row['mat_nombre'] . ' ' . $row['mat_descripcion'];
+            $query_asignado_previo = "SELECT COUNT(*) FROM operaciones 
+                    WHERE itemid = (SELECT id_materiales FROM materiales WHERE codigo = ?)
+                    AND fechaentrada IS NULL 
+                    AND voluntarioid = ?";
+                $item_asignado_a_voluntario = ejecutar_query($conn, $query_asignado_previo, 
+                [$_SESSION['qr_content'], $_SESSION['id_voluntario']])->fetchColumn();
+    
+            $query_voluntario_del_producto = "SELECT voluntarioid  FROM operaciones 
+            WHERE itemid = (SELECT id_materiales FROM materiales WHERE codigo = ?)
+            AND fechaentrada IS NULL ";
+    
+            $voluntarioid_del_material = ejecutar_query($conn, $query_voluntario_del_producto,[$_SESSION['qr_content']])->fetchColumn();
+    
+            if ($item_asignado_a_voluntario == 1) {
+                $error_mensaje = "Este item ya ha sido asignado a este voluntario ." . $voluntarioid_del_material . " tiene la opcion de devolverlo";
+                $mostrar_devolucion_material = true;
+            } else if ($voluntarioid_del_material) {
+                $error_mensaje = "Este item le pertenece a " . $voluntarioid_del_material;
+            } else {
+                $isMostrarInputCandtidad = true;
+            }
         } else {
-            $isMostrarInputCandtidad = true;
+            $error_mensaje = "No se encontró el material con el código proporcionado.";
         }
 
     } else { //LOGICA CUANDO ES UNA HERRAMIENTA
         // Solo procesar el código QR cuando se haya escaneado
-        $query_obtener_producto = "SELECT i.nombre, i.descripccion, i.cantidad 
+        $query_obtener_producto = "SELECT i.nombre, i.descripcion, i.cantidad 
         FROM items i
         WHERE i.codigo = ?";
 
@@ -260,7 +257,7 @@ if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
 
         if ($row) {
             $_SESSION['codigo_item'] = $_SESSION['qr_content'];
-            $descripcion_producto = "{$row['nombre']}: {$row['descripccion']}";
+            $descripcion_producto = "{$row['nombre']}: {$row['descripcion']}";
             $cantidad_disponible = $row['cantidad'];
 
             // Verificar asignación previa
@@ -306,7 +303,7 @@ if (isset($_SESSION['qr_content']) && !empty($_SESSION['qr_content'])) {
                 }
             }
         } else {
-            $error_mensaje = "Código QR no encontrado.";
+            $error_mensaje = "No se encontró la herramienta con el código proporcionado.";
         }
     }
     
@@ -419,18 +416,21 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                     <input class="form-control border-2 rounded-3" type="text" id="idInput" name="id" value="<?php echo htmlspecialchars($_SESSION['id_voluntario'] ?? ''); ?>" required>
                                 </div>
                                 <div class="col-auto">
-                                    <button class="btn btn-primary" type="submit" name="verificar_id">Verificar</button>    
+                                    <button class="btn btn-primary" type="submit" name="verificar_id">Verificar voluntario</button>    
                                 </div>
                                 <div class="col-auto">
                                     <?php if ($nombre_voluntario): ?>
                                         <span style="color:#5C6872; font-weight:bold;">Voluntario: <?php echo htmlspecialchars($nombre_voluntario); ?></span>
+                                        <div class="col-auto">
+                                            <button class="btn btn-primary" type="submit" name="verificar_id">Abrir escaner</button>    
+                                        </div>
                                     <?php endif; ?>    
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
-                
+                <!-- Aquí *************************************************************************-->
                 <?php if ($mostrar_codigo): ?>
                     <div class="row mb-4">
                         <div class="col-12">
@@ -439,7 +439,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="bg-plomo w-100 mb-2 p-1" style="text-align:left; ">
-                                                <b>ASGINACION DE MATERIAL (ingreso de cantidad)</b>
+                                                <b>ASGINACION DE MATERIAL (Ingreso de cantidad a requerir)</b>
                                             </div>
                                         </div>
                                     </div>
@@ -450,7 +450,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                             <p style="color:#5C6872; font-weight:bold;">Codigo: <?php echo htmlspecialchars($_SESSION['qr_content']); ?></p>
 
                                             <div class="mb-3">
-                                                <label for="cantidad_material_asignacion" class="form-label">Cantidad requeridad:</label>
+                                                <label for="cantidad_material_asignacion" class="form-label">Inserte la cantidad requerida:</label>
                                                 <input type="number" class="form-control" id="cantidad_material_asignacion" name="cantidad_material_asignacion" min="1" required>
                                             </div>
                                             
@@ -488,7 +488,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="bg-plomo w-100 mb-2 p-1" style="text-align:left; ">
-                                                <b>HERRAMIENTAS O MATERIAL (seccion de devolucion)</b>
+                                                <b>MATERIAL (Seccion de devolucion)</b>
                                             </div>
                                         </div>
                                     </div>
@@ -504,9 +504,8 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                                             <p style="color:#5C6872; font-weight:bold;">Codigo: <?php echo htmlspecialchars($_SESSION['qr_content']); ?></p>
 
                                             <div class="modal-body">
-                                                <p>Por favor, indique si el ítem está limpio o no. Si lo está, dé en CONFIRMAR</p>
                                                 <div class="mb-3">
-                                                    <label for="cantidad_material" class="form-label">Cantidad a devolver:</label>
+                                                    <label for="cantidad_material" class="form-label">Indique la cantidad a devolver:</label>
                                                     <input type="number" class="form-control" id="cantidad_material" name="cantidad_material" min="1" required>
                                                 </div>
                                                 <button type="submit" class="btn btn-primary" name="confirmar_devolucion">Confirmar</button>
@@ -557,7 +556,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                 </div>
             </div>
         <?php else: ?>
-            <p>No hay productos asignados.</p>
+            <p>No hay herramientas asignadas.</p>
         <?php endif; ?>
         <?php if (!empty($materiales_asignados)): ?>
             <div class="row">
@@ -573,7 +572,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                         <div class="table-responsive">
                             <table class="table table-borderless align-middle">
                                 <thead>
-                                    <th>Descripccion del material</th>
+                                    <th>Descripción del material</th>
                                     <th>Fecha de Salida</th>
                                     <th>Codigo </th>
                                 </thead>
@@ -590,29 +589,26 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                 </div>
             </div>
         <?php else: ?>
-            <p>No hay productos asignados.</p>
+            <p>No hay materiales asignados.</p>
         <?php endif; ?>
     <?php else: ?>
         <p>Este voluntario no tiene sesión activa.</p>
     <?php endif; ?>
 </div>
         </div>
-        <?php if ($mostrar_escaner): ?>
+        <?php if ($mostrar_escaner || isset($_SESSION['abrir_escaner'])): ?>
             <div class="row gy-2 gx-3 align-items-center">
                 <!-- qr logica -->
                 <div >
                     <!-- Scanner siempre visible -->
                     <div id="qrScannerContainer" class="mb-3">
-                        <p>ESCANE EL ITEM AUTOMATICAMENTE</p>
+                        <p>ESCANEE EL ITEM AUTOMÁTICAMENTE</p>
                         <iframe id="qrScannerFrame" src="./../utils/escaner_qr.php" style="width: 100%; height: 400px; border: none; border-radius: 8px;"></iframe>
                         <?php if ($nombre_voluntario): ?>
                             <span style="color:#5C6872; font-weight:bold;">Voluntario: <?php echo htmlspecialchars($nombre_voluntario); ?></span>
                         <?php endif; ?>   
                         <button id="closeQRScanner" class="btn btn-primary ml-10">CERRAR ESCANER</button> 
                     </div>
-
-                 
-                    
 
                     <!-- Contenedor para el resultado del QR -->
                     <div id="qrContentDisplay" class="mt-2">
@@ -622,8 +618,8 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                     </div>
                 </div>
             </div>
+            <?php unset($_SESSION['abrir_escaner']); // Limpiar la variable de sesión ?>
         <?php endif; ?>
-
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -672,7 +668,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
             .then(response => response.text())
             .then(data => {
                 setTimeout(() => {
-                    window.location.href = 'https://192.168.0.120/src/pages/gestionbodega.php';
+                    window.location.href = 'https://192.168.0.135/src/pages/gestionbodega.php';
                 }, 2000); // Recargar después de 2 segundos (2000 ms)
             })
             .catch(error => console.error('Error:', error));
@@ -682,7 +678,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
         // Botón de reinicio SOLO borra datos
         reiniciarTodo.addEventListener('click', function() {
             // Redirigir con parámetro de reset para borrar todo
-            window.location.href = 'https://192.168.0.120/src/pages/gestionbodega.php?reset=true';
+            window.location.href = 'https://192.168.0.135/src/pages/gestionbodega.php?reset=true';
         });
     </script>
     <script>

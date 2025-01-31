@@ -43,7 +43,7 @@
   --bs-info-rgb: 13, 202, 240;
   --bs-warning-rgb: 255, 193, 7;
   --bs-danger-rgb: 220, 53, 69;
-  --bs-light-rgb: 248, 249, 250;
+  --bs-light-rgb:rgb(232,236,242);
   --bs-dark-rgb: 33, 37, 41;
   --bs-primary-text-emphasis: #052c65;
   --bs-secondary-text-emphasis: #2b2f32;
@@ -84,7 +84,7 @@
   --bs-body-bg-rgb: 255, 255, 255;
   --bs-emphasis-color: #5C6872;
   --bs-emphasis-color-rgb: 0, 0, 0;
-  --bs-secondary-color: rgba(33, 37, 41, 0.75);
+  --bs-secondary-color: rgba(92, 104, 114, 0.706);
   --bs-secondary-color-rgb: 33, 37, 41;
   --bs-secondary-bg: #e9ecef;
   --bs-secondary-bg-rgb: 233, 236, 239;
@@ -488,6 +488,7 @@ button,
 [type=reset],
 [type=submit] {
   -webkit-appearance: button;
+  appearance: button;
 } 
 button:not(:disabled),
 [type=button]:not(:disabled),
@@ -544,9 +545,11 @@ legend + * {
 }
 
 [type=search] {
-  -webkit-appearance: textfield;
-  outline-offset: -2px;
+  -webkit-appearance: textfield; /* Propiedad con prefijo para navegadores basados en WebKit */
+  appearance: textfield; /* Propiedad estándar para otros navegadores */
+  outline-offset: -2px; /* Propiedad adicional */
 }
+
 
 /* rtl:raw:
 [type="tel"],
@@ -571,9 +574,9 @@ legend + * {
 
 ::file-selector-button {
   font: inherit;
-  -webkit-appearance: button;
+  -webkit-appearance: button; /* Propiedad con prefijo para navegadores basados en WebKit */
+  appearance: button; /* Propiedad estándar para otros navegadores */
 }
-
 output {
   display: inline-block;
 }
@@ -2397,19 +2400,19 @@ textarea.form-control-lg {
   height: 1em;
   margin-top: 0.25em;
   vertical-align: top;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  -webkit-appearance: none; /* Propiedad con prefijo para navegadores basados en WebKit */
+  -moz-appearance: none; /* Propiedad con prefijo para navegadores basados en Gecko (Firefox) */
+  appearance: none; /* Propiedad estándar para otros navegadores */
   background-color: var(--bs-form-check-bg);
   background-image: var(--bs-form-check-bg-image);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   border: var(--bs-border-width) solid var(--bs-border-color);
-  -webkit-print-color-adjust: exact;
-  color-adjust: exact;
-  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact; /* Propiedad con prefijo para impresión en WebKit */
+  print-color-adjust: exact; /* Propiedad estándar de impresión */
 }
+
 .form-check-input[type=checkbox] {
   border-radius: 0.25em;
 }
@@ -7577,7 +7580,7 @@ textarea.form-control-lg {
   border-color: rgba(var(--bs-danger-rgb), var(--bs-border-opacity)) !important;
 }
 
-.border-light {
+.border-gray {
   --bs-border-opacity: 1;
   border-color: rgba(var(--bs-light-rgb), var(--bs-border-opacity)) !important;
 }

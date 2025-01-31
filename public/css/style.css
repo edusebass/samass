@@ -223,12 +223,6 @@ footer {
     height: 20px; 
     margin-right: 5px;
 }
-/*clase para icono de asamblea*/
-.button-icon-co{
-    width: 40px; 
-    height: 23px; 
-    margin: right 0;
-}
 
 /*Colores frecuentes*/
 .bg-chocolate {
@@ -260,7 +254,7 @@ body {
 .header-table td { 
     padding: 5px; 
 }
-/*Listas de documentos*/
+/*Listas de documentos bodega.php*/
 .py-adm-list-style { 
     padding-top: 0.26rem!important;
     padding-bottom: 0.26rem!important; 
@@ -276,6 +270,29 @@ body {
 .interlineado { line-height: normal; /* Mantiene el interlineado normal*/
 }
 
+/* Tabla inventario-material.php */
+.table-bordered {
+    border: 2px solid chocolate !important; /* Si es necesario */
+}
+
+.rounded-corners thead tr:first-child th:first-child {
+    border-top-left-radius: 15px !important;
+}
+.rounded-corners thead tr:first-child th:last-child {
+    border-top-right-radius: 15px !important;
+}
+.rounded-corners tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 15px !important;
+}
+.rounded-corners tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 15px !important;
+}
+.dataTables_filter input {
+    padding: 5px 10px;
+    border: 1px solid chocolate !important;
+    border-radius: 4px;
+    margin-left: 5px;
+}
 
 /* General Bootstrap overrides and custom styles 
 .bg-light {
