@@ -159,28 +159,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_item'])) {
                 }
             }
 
+            // Manejar la subida de la foto si se proporciona
+            $foto_path = null;
+            if (isset($_FILES['herramienta_foto']) && $_FILES['herramienta_foto']['error'] == UPLOAD_ERR_OK) {
+                $foto_dir = './../../docs/herramientas_fotos/';
+                if (!file_exists($foto_dir)) {
+                    mkdir($foto_dir, 0777, true);
+                }
+                $foto_path = $foto_dir . basename($_FILES['herramienta_foto']['name']);
+                if (!move_uploaded_file($_FILES['herramienta_foto']['tmp_name'], $foto_path)) {
+                    throw new Exception("Error al subir la foto de la herramienta");
+                }
+            } else {
+                // Usar una imagen predeterminada si no se proporciona una
+                $foto_path = './../../docs/herramientas_fotos/default_tool.png';
+            }
+
             // Generación de QR
             $qrData = generateQR(
                 $_POST['codigo']
             );
 
             // Inserción en la tabla items
-            $query = "INSERT INTO items (nombre, descripcion, estado_id, cantidad, costo, fecha, vida, observaciones, seccion_id, categoria_id, area_id, elemento_id, codigo, qr_image_path, fabricante, serial, año_fabricacion, id_fuentepoder, valor_residual, modelo, grupo_id) 
-            VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ROUND(? * 0.20, 2), ?, ?)";
-            $vida_util_en_horas = $_POST['vida'] * 720;
-            $costo_mantenimiento = 0; //valor por defecto =D
+            $query = "INSERT INTO items (nombre, descripcion, estado_id, costo, fecha, vida, observaciones, seccion_id, categoria_id, area_id, elemento_id, codigo, qr_image_path, fabricante, serial, año_fabricacion, id_fuentepoder, valor_residual, modelo, grupo_id, foto_path) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ROUND(? * 0.20, 2), ?, ?)";
+            $vida_util_en_horas = isset($_POST['vida']) && is_numeric($_POST['vida']) ? $_POST['vida'] * 720 : 0;
             $params = [
                 $_POST['nombre'], $_POST['descripcion'], $_POST['estado_id'],
-                $_POST['cantidad'], $_POST['minimal'], $_POST['costo'], $_POST['fecha'],
+                $_POST['costo'], $_POST['fecha'],
                 $vida_util_en_horas, 
                 $_POST['observaciones'], $_POST['seccion_id'], 
                 $_POST['categoria_id'], $_POST['area_id'], $_POST['elemento_id'],
                 $qrData['code'], $qrData['path'], $_POST['fabricante'], $_POST['serial'], $_POST['año_fabricacion'], $_POST['fuentepoder_id'], $_POST['costo'], $_POST['modelo'], 
-                $grupo_id
+                $grupo_id, $foto_path
             ];
-        
+
             ejecutar_query($conn, $query, $params);
             $itemId = $conn->lastInsertId();
+
         
             $qrGeneratedMessage .= "
                 <div class='qr-item'>
@@ -307,6 +323,7 @@ $resultado_mat_areas = obtener_mat_areas($conn);
                 <!-- Materiales Section ********************************-->
            <!-- Sección de Materiales -->
             <div id="materialesFields" style="display:none;">
+            
                 <div class="row py-1">
                     <div class="col-12">
                         <div class="mb-3">
@@ -406,6 +423,14 @@ $resultado_mat_areas = obtener_mat_areas($conn);
             </div>
             <!-- HERAMIENTAS SECTION FORMULARIO -->
             <section id="herramientasFields" style="display:none;">
+            <div class="row py-1">
+                <div class="col-12 col-md-4">
+                    <div class="mb-3">
+                        <label for="herramienta_foto" class="form-label">Foto de la Herramienta:</label>
+                        <input type="file" class="form-control border-2 rounded-3" id="herramienta_foto" name="herramienta_foto" accept="image/*">
+                    </div>
+                </div>
+            </div>
                 <div class="row py-1">
                     <div class="col-12">
                         <div class="mb-3 pt-3">
