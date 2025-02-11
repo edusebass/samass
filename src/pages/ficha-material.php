@@ -28,24 +28,52 @@ $estado = obtener_detalle_por_id($conn, 'estado', 'idestado', $material['id_esta
 $area = obtener_detalle_por_id($conn, 'mat_area', 'id_mat_area', $material['id_mat_area']);
 $medida = obtener_detalle_por_id($conn, 'mat_medida', 'id_mat_medida', $material['id_mat_medida']);
 
+function renderInformationRow($label, $value, $useSpan = false) {
+    $element = $useSpan ? 'span' : 'label';
+    return "
+    <div class='row'>
+        <$element class='col-sm-3 col-md-5 fw-bold d-flex '>$label</$element>
+        <div class='col-sm-9 col-md-7 d-flex align-items-end'>
+            <span>" . htmlspecialchars($value) . "</span>
+        </div>
+    </div>";
+}
+
+// Función para renderizar sección Detalles
+function renderDetailRow($label, $value, $useSpan = false) {
+    $element = $useSpan ? 'span' : 'label';
+    return "
+    <div class='row'>
+        <$element class='col-sm-7 fw-bold d-flex align-items-center'>$label</$element>
+        <div class='col-sm-5 d-flex align-items-end'>
+            <span>" . htmlspecialchars($value) . "</span>
+        </div>
+    </div>";
+}
 ?>
     <title>SAM Assistant</title>
 </head>
 <body>
 <div class="container-fluid mt-3">
-    <div style="text-align:left; background-color: #e8ecf2; color:#5C6872;">INFORMACIONES</>    
+    <!-- Sección de Información -->
     <section class="row">
         <div class="col-12">
-            <div class="w-100 bg-plomo mb-2 p-1"><b>INFORMACIONES</b></div>
-            <div class="card rounded-4 px-3 mb-3 gap-3 justify-content-between">
-                <div class="row mt-3 p-1 justify-content-start">
-                    <div class="col-12 col-sm-6">
+            <div class="w-100 bg-plomo mb-2 p-1"><b>INFORMACIÓN</b></div>
+            <div class="card rounded-4 px-1 mb-3">
+                <div class="row row-cols-sm-2 m-1">
+                    <div class="col d-flex flex-column">
+                        <?php
+                            echo renderInformationRow('CODIGO:', $item['codigo'], true);
+                            echo renderInformationRow('NOMBRE:', $item['nombre'], true);
+                            echo renderInformationRow('DESCRIPCIÓN:', $item['descripcion'], true);
+                        ?>
+                    </div>
                     <!-- <div class="row mb-3"> -->
-                        <label for="" class="col-sm-2 col-form-label">CODIGO: </label>
+                        <!-- <label for="" class="col-sm-2 col-form-label">CODIGO: </label>
                         <div class="col-sm-8"> 
                             <span class="form-control-plaintext"><?php echo htmlspecialchars(string: $material['codigo']); ?></span> 
                         </div> 
-                        <!-- </div> -->
+                        </div>
                         <label class="col-sm-4 col-form-label">NOMBRE:</label> 
                         <div class="col-sm-8"> 
                             <span class="form-control-plaintext"><?php echo htmlspecialchars(string: $material['mat_nombre']); ?></span> 
@@ -53,7 +81,7 @@ $medida = obtener_detalle_por_id($conn, 'mat_medida', 'id_mat_medida', $material
                         <label class="col-sm-4 col-form-label">DESCRIPCION:</label> 
                         <div class="col-sm-8"> 
                             <span class="form-control-plaintext"><?php echo htmlspecialchars(string: $material['mat_descripcion']); ?></span> 
-                        </div>
+                        </div> -->
                         <label class="col-sm-4 col-form-label">ESTADO:</label> 
                         <div class="col-sm-8"> 
                             <span class="form-control-plaintext"><?php echo htmlspecialchars(string:$estado['descripcion']); ?></span> 

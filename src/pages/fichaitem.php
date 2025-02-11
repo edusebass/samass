@@ -19,11 +19,16 @@ function obtener_item($conn, $codigo) {
 }
 
 $item = obtener_item($conn, $codigo)->fetch(PDO::FETCH_ASSOC);
+$cantidad = $item['cantidad'];
+$costo_mantenimiento = $item['costo_mantenimiento']; // Definir la variable costo_mantenimiento desde la base de datos
 
 function calcular_progreso_mantenimiento($fecha_creacion, $tipo_mantenimiento) {
     $fecha_actual = new DateTime();
     $fecha_inicio = new DateTime($fecha_creacion);
     $intervalo = $fecha_actual->diff($fecha_inicio);
+    
+    // Normalizar el tipo de mantenimiento para evitar discrepancias
+    $tipo_mantenimiento = ucfirst(strtolower(trim($tipo_mantenimiento)));
 
     switch ($tipo_mantenimiento) {
         case 'Diario':
@@ -42,11 +47,16 @@ function calcular_progreso_mantenimiento($fecha_creacion, $tipo_mantenimiento) {
             $dias_totales = 365;
             break;
         default:
-            $dias_totales = 0;
+            // $dias_totales = 0;
+            $dias_totales = 1; // Asignar un valor mínimo para evitar división por cero
+            break;
     }
 
     $dias_transcurridos = $intervalo->days;
-    $progreso = min(100, ($dias_transcurridos / $dias_totales) * 100);
+    $progreso = ($dias_transcurridos / $dias_totales) * 100;
+     $progreso = min(100, max(0, $progreso)); // Asegurar que el progreso esté entre 0 y 100
+    // $progreso = min(100, ($dias_transcurridos / $dias_totales) * 100);
+    
 
     return $progreso;
 }
@@ -86,140 +96,169 @@ function obtener_descripcion_codigo_man($conn, $id_codigo_man) {
     $query = "SELECT descripcion FROM man_codigo WHERE idman_codigo = ?";
     return ejecutar_query($conn, $query, [$id_codigo_man])->fetch(PDO::FETCH_ASSOC)['descripcion'];
 }
-?>
-<?php
-function renderRow($label, $value, $useSpan = false) {
+// Función para renderizar sección Información
+function renderInformationRow($label, $value, $useSpan = false) {
     $element = $useSpan ? 'span' : 'label';
     return "
-    <div class='row mb-2'>
-        <$element class='col-sm-5 fw-bold'>$label</$element>
-        <div class='col-sm-7'>
+    <div class='row'>
+        <$element class='col-sm-3 col-md-5 fw-bold d-flex '>$label</$element>
+        <div class='col-sm-9 col-md-7 d-flex align-items-end'>
             <span>" . htmlspecialchars($value) . "</span>
         </div>
     </div>";
 }
+
+// Función para renderizar sección Detalles
+function renderDetailRow($label, $value, $useSpan = false) {
+    $element = $useSpan ? 'span' : 'label';
+    return "
+    <div class='row'>
+        <$element class='col-sm-7 fw-bold d-flex align-items-center'>$label</$element>
+        <div class='col-sm-5 d-flex align-items-end'>
+            <span>" . htmlspecialchars($value) . "</span>
+        </div>
+    </div>";
+}
+
+
+
 ?>
     <title>SAM Assistant</title>
 </head>
 <body>
 <div class="container-fluid mt-3">
+    <!-- Sección de Información -->
     <section class="row">
         <div class="col-12">
-            <div class="w-100 bg-plomo mb-2 p-1"><strong>INFORMACIONES</strong></div>
-            <div class="card rounded-4 px-3 mb-3">
-                <div class="row row-cols-sm-2 p-1">
-                    <div class="col">
+            <div class="w-100 bg-plomo mb-2 p-1"><strong>INFORMACIÓN</strong></div>
+            <div class="card rounded-4 px-1 mb-3">
+                <div class="row row-cols-sm-2 m-1">
+                    <div class="col d-flex flex-column">
                         <?php
-                        echo renderRow('CODIGO:', $item['codigo'], true);
-                        echo renderRow('NOMBRE:', $item['nombre'], true);
-                        echo renderRow('DESCRIPCIÓN:', $item['descripcion'], true);
+                        echo renderInformationRow('CODIGO:', $item['codigo'], true);
+                        echo renderInformationRow('NOMBRE:', $item['nombre'], true);
+                        echo renderInformationRow('DESCRIPCIÓN:', $item['descripcion'], true);
                         ?>
                     </div>
-                    <div class="col">
+                    <div class="col d-flex flex-column">
                         <?php
-                        echo renderRow('TIPO ELEMENTO:', $elemento['tipo'], true);
-                        echo renderRow('ESTADO:', $estado['descripcion'], true);
-                        echo renderRow('CANTIDAD:', $item['cantidad'], true);
+                        echo renderInformationRow('TIPO ELEMENTO:', $elemento['tipo'], true);
+                        echo renderInformationRow('ESTADO:', $estado['descripcion'], true);
+                        echo renderInformationRow('CANTIDAD:', $item['cantidad'], true);
                         ?>
+                        
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <!-- Sección de Detalles -->
     <section class="row">
         <div class="col-12">
             <div class="w-100 bg-plomo mb-2 p-1"><strong>DETALLES</strong></div>
-            <div class="card rounded-4 px-3 mb-3">
-                <div class="row row-cols-sm-2 row-cols-md-4 p-1">
-                    <div class="col border-end">
+            <div class="card rounded-4 px-1 mb-3">
+                <div class="row row-cols-sm-1 row-cols-md-2 row-cols-lg-4 m-1">
+                    <div class="col d-flex flex-column border-end ps-">
                         <?php
-                        echo renderRow('COSTO UNITARIO:', $item['costo'], true);
-                        echo renderRow('VALOR RESIDUAL:', $item['valor_residual'], true);
-                        // echo renderRow('COSTO MANTENIMIENTO:', $item['costo_mantenimiento'], true);
+                        echo renderDetailRow('COSTO UNITARIO:', $item['costo'], true);
+                        echo renderDetailRow('VALOR RESIDUAL:', $item['valor_residual'], true);
+                        echo renderDetailRow('COSTO MANTENIMIENTO:', $item['costo_mantenimiento'], true);
                         ?>
                     </div>
-                    <div class="col border-end">
+                    <div class="col d-flex flex-column border-end ps-">
                         <?php
-                        echo renderRow('FECHA ADQUISICIÓN:', $item['fecha'], true);
-                        echo renderRow('TIEMPO UTILIZACIÓN:', $item['uso'], true);
-                        echo renderRow('TIEMPO VIDA ÚTIL:', $item['vida'], true);
+                        echo renderDetailRow('FECHA ADQUISICIÓN:', $item['fecha'], true);
+                        echo renderDetailRow('TIEMPO UTILIZACIÓN:', $item['uso'], true);
+                        echo renderDetailRow('TIEMPO VIDA ÚTIL:', $item['vida'], true);
                         ?>
                     </div>
-                    <div class="col border-end">
+                    <div class="col d-flex flex-column border-end ps-">
                         <?php
-                        echo renderRow('FABRICANTE:', $item['fabricante'], true);
-                        echo renderRow('S/N:', $item['serial'], true);
-                        echo renderRow('MODELO:', $item['modelo'], true);
+                        echo renderDetailRow('FABRICANTE:', $item['fabricante'], true);
+                        echo renderDetailRow('S/N:', $item['serial'], true);
+                        echo renderDetailRow('MODELO:', $item['modelo'], true);
                         ?>
                     </div>
-                    <div class="col border-end">
+                    <div class="col d-flex flex-column ps-">
                         <?php
-                        echo renderRow('AÑO FABRICACIÓN:', $item['año_fabricacion'], true);
-                        echo renderRow('FUENTE PODER:', $fuentePoder['descripcion'], true);
+                        echo renderDetailRow('AÑO FABRICACIÓN:', $item['año_fabricacion'], true);
+                        echo renderDetailRow('FUENTE PODER:', $fuentePoder['descripcion'], true);
                         ?>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <!-- Sección de Mantenimiento -->
     <div class="w-100 bg-plomo mb-2 p-1"><strong>MANTENIMIENTO</strong></div>
-    <section class="row row-cols-sm-2 row-cols-md-3">
-        <div class="col-12 col-md-5">
-            <div class="card rounded-4 px-3 mb-3">
-                <div class="row">
-                    <div class="col-12">
-                        <label for="" class="form-label">VIGENTE SI</label>
-                        <?php
-                        foreach ($mantenimientos as $mantenimiento) {
-                            $descripcion_codigo_man = obtener_descripcion_codigo_man($conn, $mantenimiento['id_codigo_man']);
-                            $progreso = calcular_progreso_mantenimiento($mantenimiento['fecha_creacion'], $descripcion_codigo_man);
+    <section class="row row-cols-sm-2 row-cols-md-3 justify-content-around align-items-stretch">
+        <!-- Primera Tarjeta -->
+        <div class="col-12 col-md-5 d-flex align-items-stretch mb-3">
+            <div class="card rounded-4 px-3 py-2 flex-fill">
+            <div class="row">
+                <div class="col-12">
+                    <label for="" class="form-label mt-2 ">VIGENTE SI</label>
+                    <?php foreach ($mantenimientos as $mantenimiento):
+                        $descripcion_codigo_man = obtener_descripcion_codigo_man($conn, $mantenimiento['id_codigo_man']);
+                        $progreso = calcular_progreso_mantenimiento($mantenimiento['fecha_creacion'], $descripcion_codigo_man); ?>
 
-                            echo "<p>Notas: " . htmlspecialchars($mantenimiento['notas']) . "</p>";
-                            echo "<p>Descripción del Código de Mantenimiento: " . htmlspecialchars($descripcion_codigo_man) . "</p>";
+                        <p>Notas: <?= htmlspecialchars($mantenimiento['notas']); ?></p>
+                        <p>Descripción del Código de Mantenimiento: <?= htmlspecialchars($descripcion_codigo_man); ?></p>
+            
+                        <!-- Barra de progreso -->
+                        <div class='progress'>
+                            <div class='progress-bar' role='progressbar' style='width: <?= $progreso; ?>%;' aria-valuenow='<?= $progreso; ?>' aria-valuemin='0' aria-valuemax='100'><?= $progreso; ?>%</div>
+                        </div>
 
-                            echo "<div class='progress'>
-                                    <div class='progress-bar' role='progressbar' style='width: " . htmlspecialchars($progreso) . "%;' aria-valuenow='" . htmlspecialchars($progreso) . "' aria-valuemin='0' aria-valuemax='100'></div>
-                                  </div>";
+                        <!-- Alertas usando Bootstrap -->
+                        <?php if ($progreso >= 100): ?>
+                            <div class='alert alert-danger mt-2' role='alert'>
+                                El mantenimiento debe realizarse ya.
+                            </div>
+                        <?php elseif ($progreso >= 80): ?>
+                            <div class='alert alert-warning mt-2' role='alert'>
+                                El mantenimiento está próximo a vencer.
+                            </div>
+                        <?php endif; ?>
 
-                            if ($progreso >= 100) {
-                                echo "<script>alert('El mantenimiento debe realizarse ya.');</script>";
-                            } elseif ($progreso >= 80) {
-                                echo "<script>alert('El mantenimiento está próximo a vencer.');</script>";
-                            }
-                        }
-                        ?>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
+
+            </div>
         </div>
-        <div class="col-12 col-md-5">
-            <div class="card rounded-4 px-3 mb-3">
+        <!-- Segunda Tarjeta - Manuales-->
+        <div class="col-12 col-md-5 d-flex align-items-stretch mb-3">
+            <div class="card rounded-4 px-3 py-2 flex-fill">
                 <div class="row">
                     <div class="col-4 ">
                         <img class="img-fluid" src="/public/ico/manual.png" alt="Manual" style="width: 150px;">
                     </div>
                     <div class="col-8 ">
-                        <span>MANUALES</span>
+                        <span class="fw-bold">MANUALES</span>
                         <?php
                         if (!empty($manuales)) {
                             foreach ($manuales as $manual) {
                                 echo "<p>Título: " . htmlspecialchars($manual['titulo']) . "</p>";
                                 echo "<p>Enlace: <a href='./../../" . htmlspecialchars($manual['enlace']) . "' download>" . htmlspecialchars($manual['enlace']) . "</a></p>";
                             }
+                        } else {
+                            echo "<p>No hay manuales disponibles.</p>";
                         }
                         ?>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-2">
-            <div class="card rounded-4 px-3 mb-3">
+        <!-- Tercera Tarjeta - Código QR -->
+        <div class="col-12 col-md-2 d-flex align-items-stretch mb-3">
+            <div class="card rounded-4 px-3 py-2 flex-fill">
                 <div class="row">
-                    <div class="col-12">
-                        <span id="codigoQR">CÓDIGO QR</span>
+                    <div class="col-12 text-center">
+                        <span id="codigoQR" class="fw-bold">CÓDIGO QR</span>
                         <?php
                         if (!empty($item['qr_image_path'])) {
-                            echo "<img width='150' src='./../../" . htmlspecialchars($item['qr_image_path']) . "' alt='Código QR'>";
+                            echo "<img width='150' src='./../../" . htmlspecialchars($item['qr_image_path']) . "' alt='Código QR' style='max-width: 150px;'>";
                         } else {
                             echo "<p>No hay código QR disponible.</p>";
                         }
@@ -233,7 +272,37 @@ function renderRow($label, $value, $useSpan = false) {
 <?php
 require './../layout/footer.htm';
     ?> 
-    -
+
+<!-- <script>
+document.addEventListener('DOMContentLoaded', function () {
+    <?php foreach ($mantenimientos as $mantenimiento): 
+        $progreso = calcular_progreso_mantenimiento($mantenimiento['fecha_creacion'], $descripcion_codigo_man); ?>
+        var ctx = document.getElementById('progresoMantenimiento<?= $mantenimiento['id']; ?>').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Progreso'],
+                datasets: [{
+                    label: 'Porcentaje de Progreso',
+                    data: [<?= $progreso; ?>],
+                    backgroundColor: ['rgba(75, 192, 192, 0.2)'],
+                    borderColor: ['rgba(75, 192, 192, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    <?php endforeach; ?>
+});
+</script> -->
+
 </body>
 
 </html>

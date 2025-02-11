@@ -168,9 +168,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_item'])) {
             $query = "INSERT INTO items (nombre, descripcion, estado_id, cantidad, costo, fecha, vida, observaciones, seccion_id, categoria_id, area_id, elemento_id, codigo, qr_image_path, fabricante, serial, año_fabricacion, id_fuentepoder, valor_residual, modelo, grupo_id) 
             VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ROUND(? * 0.20, 2), ?, ?)";
             $vida_util_en_horas = $_POST['vida'] * 720;
+            $costo_mantenimiento = 0; //valor por defecto =D
             $params = [
                 $_POST['nombre'], $_POST['descripcion'], $_POST['estado_id'],
-                $_POST['costo'], $_POST['fecha'],
+                $_POST['cantidad'], $_POST['minimal'], $_POST['costo'], $_POST['fecha'],
                 $vida_util_en_horas, 
                 $_POST['observaciones'], $_POST['seccion_id'], 
                 $_POST['categoria_id'], $_POST['area_id'], $_POST['elemento_id'],
