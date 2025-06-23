@@ -25,74 +25,127 @@ body, html {
     font-family: "Lato", serif;
     font-weight: 100;
     font-style: normal;
-  }
-  
-  .lato-light {
+}
+
+.lato-light {
     font-family: "Lato", serif;
     font-weight: 300;
     font-style: normal;
-  }
-  
-  .lato-regular {
+}
+
+.lato-regular {
     font-family: "Lato", serif;
     font-weight: 400;
     font-style: normal;
-  }
-  
-  .lato-bold {
+}
+
+.lato-bold {
     font-family: "Lato", serif;
     font-weight: 700;
     font-style: normal;
-  }
-  
-  .lato-black {
+}
+
+.lato-black {
     font-family: "Lato", serif;
     font-weight: 900;
     font-style: normal;
-  }
-  
-  .lato-thin-italic {
+}
+
+.lato-thin-italic {
     font-family: "Lato", serif;
     font-weight: 100;
     font-style: italic;
-  }
-  
-  .lato-light-italic {
+}
+
+.lato-light-italic {
     font-family: "Lato", serif;
     font-weight: 300;
     font-style: italic;
-  }
-  
-  .lato-regular-italic {
+}
+
+.lato-regular-italic {
     font-family: "Lato", serif;
     font-weight: 400;
     font-style: italic;
-  }
-  
-  .lato-bold-italic {
+}
+
+.lato-bold-italic {
     font-family: "Lato", serif;
     font-weight: 700;
     font-style: italic;
-  }
-  
-  .lato-black-italic {
+}
+.lato-black-italic {
     font-family: "Lato", serif;
     font-weight: 900;
     font-style: italic;
-  }
-  
-/*.tx {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: left;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
 }
-*/
+
+/*Colores frecuentes*/
+.bg-chocolate {
+    background-color: chocolate;
+}
+.bg-plomo {
+    background-color: #e8ecf2;
+}
+
+/*HEADER & FOOTER*/
+/*Header styles*/
+.header {
+    padding: 10px;
+    text-align: center;
+    position: relative;
+    color: white;
+}
+.header img.left {
+    position: absolute;
+    left: 10px;
+    height: 30px; 
+    top: 50%;
+    transform: translateY(-50%);
+}
+.header img.right {
+    position: absolute;
+    right: 10px;
+    height: 30px; 
+    top: 50%;
+    transform: translateY(-50%);
+}
+.header .text-container {
+    display: inline-block;
+    text-align: center;
+}
+.header .text-container h1, 
+.header .text-container h2, 
+.header .text-container h3 {
+    margin: 5px;
+}
+.header-user {
+    height:100px;
+}
+.btns-user {
+    float:right;
+    text-align: right;
+    height:44.8px;
+    align-content: center;
+}
+/*Footer Styles*/
+
+footer {
+    text-align: center;
+    color: #616162;
+    width: 100%;
+}
+.footer img.f-left {
+    height: 60px;
+    width: 120px; 
+}
+.footer img.f-right {
+    height: 30px; 
+    width: auto;
+    margin-left: 10px;
+}
+
+/*LOGIN PAGE*/
 .login-form { 
     width: 300px; 
     margin: 50px auto; 
@@ -116,7 +169,7 @@ body, html {
     color: red; 
 }
 
-/*Tables*/
+/*TABLES*/
 table {
    /*border-collapse: collapse; */
     width: 100%;
@@ -159,101 +212,165 @@ table {
 .content {
     flex: 1;
 }
-
-/*Footer Styles*/
-
-footer {
-    text-align: center;
-    color: #616162;
-    width: 100%;
-   
-}
-.footer img.f-left {
-    height: 60px;
-    width: 120px; 
-}
-.footer img.f-right {
-    height: 30px; 
-    width: auto;
-    margin-left: 10px;
-}
-/*Header styles*/
-.header {
-    padding: 10px;
-    text-align: center;
-    position: relative;
-    color: white;
-}
-.header img.left {
-    position: absolute;
-    left: 10px;
-    height: 30px; 
-    top: 50%;
-    transform: translateY(-50%);
-}
-.header img.right {
-    position: absolute;
-    right: 10px;
-    height: 30px; 
-    top: 50%;
-    transform: translateY(-50%);
-}
-.header .text-container {
-    display: inline-block;
-    text-align: center;
-}
-.header .text-container h1, 
-.header .text-container h2, 
-.header .text-container h3 {
-    margin: 5px;
-}
-.header-user {
-    height:100px;
-}
-.btns-user {
-    float:right;
-    text-align: right;
-    height:44.8px;
-    align-content: center;
-}
-
-/*Grupo de botones/inventario*/
-.button-icon{
-    width: 20px; 
-    height: 20px; 
-    margin-right: 5px;
-}
-
-/*Colores frecuentes*/
-.bg-chocolate {
-    background-color: chocolate;
-}
-.bg-plomo {
-    background-color: #e8ecf2;
-}
-.text-color{
-    color:#5C6872;
-}
-.text-color-bold{
-    color:#5C6872 ; 
-    font-weight:bold !important;
-}
-
-/*Estilos de cajas*/
-.border-default{
-    border: solid 2px #E4640D;
-    border-radius: 15px; 
-}
-
 body { 
     margin: 0; padding: 0; font-family: Arial, sans-serif;
- }
+}
 .header-table { 
     width: 100%; border-collapse: collapse; 
 }
 .header-table td { 
     padding: 5px; 
 }
+/*NUEVO.ITEM
+Herramientas*/
+#preview {
+    /* max-width: 150px; */
+    height: 75%;
+    /* display: block; */
+    /* margin: auto;
+    border-radius: 8px; */
+} 
+
+/*INVENTARIO*/
+
+/*Grupo de botones-/INVENTARIO*/
+.button-icon{
+    width: 20px; 
+    height: 20px; 
+    margin-right: 5px;
+}
+#scrollmenu {
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none; /* Para Firefox */
+    -ms-overflow-style: none; /* Para IE y Edge */
+}
+/* Ocultar barra en Webkit (Chrome, Safari) */
+#scrollmenu::-webkit-scrollbar {
+    display: none;
+}
+
+#scrollmenu button {
+    flex-grow: 0;
+}
+#scrollLeft {
+    z-index: 2; /* Or any value higher than the default stacking order*/
+}
+#scrollRight{
+    z-index: 2;
+}
+/* Ajustes según el breakpoint de Bootstrap */
+@media (max-width: 575.98px) { /* xs: menos de 576px */
+#scrollmenu {
+    flex-wrap: nowrap; /* Mantener en una sola línea para scroll horizontal */
+}
+}
+
+@media (min-width: 576px) { /* sm en adelante */
+#scrollmenu {
+    display:inline-flex;
+    flex-wrap: wrap;       /* Permitir que los botones se ajusten al contenido */
+    overflow-x: hidden;    /* No es necesario el scroll horizontal */
+}
+}
+
+/*Ficha-item/INVENTARIO*/
+/*Imagen del producto*/
+.text-value {
+    white-space: normal;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Ajustar números largos */
+.number-value {
+    display: block;
+    white-space: normal; /* Permite que el texto salte a la siguiente línea */
+    word-wrap: break-word; /* Ajusta el texto dentro del contenedor */
+    overflow: visible; /* Asegura que el contenido no se oculte */
+}
+
+.product-image {
+    width: 65px;
+    max-width: 65px;
+    max-height: 65px;
+    object-fit: contain;
+}
+/*Borde de separación/Ficha Item-Materiales/INVENTARIO*/
+.separation-edge {
+    border-right: 2px solid #d2691e;
+}
+
+/*Separación de palabras por sílabas/-Ficha Item-Materiales*/
+.detail-row {
+    hyphens: auto;
+}
+
+/* Ajustes para pantallas grandes */
+@media (max-width: 1055px) {
+    .detail-row {
+        flex-direction: column;
+    }
+}
+
+/* Ajustes para pantallas medianas */
+@media (max-width: 991px) {
+    .product-image {
+        width: 45px;
+        max-width: 45px;
+        max-height: 45px;
+    }
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 767px) {
+    .product-image {
+        width: 45px;
+        max-width: 45px;
+        max-height: 45px;
+    }
+    .separation-edge:nth-child(2) { 
+        border-right: none !important;
+    }
+    .row-cols-2 > .col:nth-child(even) {
+        border-right: none !important;
+    }
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 575px) {
+    .separation-edge {
+        border-right: none !important;
+    }
+}
+
+/* Eliminar borde de la última columna en pantallas grandes */
+@media (min-width: 768px) {
+    .row > .col-sm-5:last-child, .row > .col-sm-2:last-child {
+        border-right: none !important;
+    }
+}
+
+/* INVENTARIO-MATERIAL */
+.dataTables_wrapper .top {
+    display: flex;
+    justify-content: space-between;
+}
+@media (max-width: 455px) {
+    .dataTables_wrapper .top {
+        flex-direction: column;
+        justify-content:space-around;
+    }
+}
+@media (max-width: 455px) {
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        padding: 4px; /* Relleno específico de 4 píxeles en pantallas menores a 455 px */
+    }
+}
+
+/*BODEGA.PHP*/
+
 /*Listas de documentos bodega.php*/
 .py-adm-list-style { 
     padding-top: 0.26rem!important;
@@ -264,10 +381,14 @@ body {
     list-style-image:image("/public/ico/pdf.svg")
 }
 
+/*REGIONAL.PHP*/
+
 /*Tabla regional.php Asistencia*/
-.no-interlineado { line-height: 10%; /* mínimo*/ 
+.no-interlineado { 
+    line-height: 10%; /* mínimo*/ 
 } 
-.interlineado { line-height: normal; /* Mantiene el interlineado normal*/
+.interlineado { 
+    line-height: normal; /* Mantiene el interlineado normal*/
 }
 
 /* Tabla inventario-material.php */
@@ -294,37 +415,6 @@ body {
     margin-left: 5px;
 }
 
-/* General Bootstrap overrides and custom styles 
-.bg-light {
-    background-color: #e8ecf2 !important;
-}
-
-.font-weight-bold {
-    font-weight: bold !important;
-}
-
-.text-large {
-    font-size: large !important;
-}
-
-.text-muted {
-    color: #666768 !important;
-}
-
-.py-3 {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-}
-
-.d-inline-block {
-    display: inline-block !important;
-}
-
-.mr-3 {
-    margin-right: 1rem !important;
-}
-*/
-
 @media (max-width: 767px) {
     .header-user {
         height:150px;
@@ -350,8 +440,9 @@ body {
     }
 }
 
-/* ESCANER GESTION BODEGA */
+/*GESTION-BODEGA.PHP*/
 
+/*Escáner*/
 #qrScannerContainer {
     position: fixed;
     top: 50px; /* Ajusta el valor según donde quieras que aparezca */
@@ -364,20 +455,18 @@ body {
     padding: 10px;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  @media screen and (min-width: 768px) {
+}
+
+@media screen and (min-width: 768px) {
     #qrScannerContainer {
-      position: fixed;
+    position: fixed;
       top: 20px; /* Ajusta el valor si lo necesitas */
       left: 50%; /* Colocamos el contenedor un poco más a la izquierda */
-      transform: translateX(-50%);
+    transform: translateX(-50%);
       width: 30%; /* Tamaño más pequeño en pantallas grandes */
       max-width: 400px; /* Limita aún más el tamaño */
       z-index: 1050; /* Asegúrate de que esté por encima de otros elementos */
-  
       border-radius: 15px; /* Borde más redondeado */
       padding: 20px; /* Aumenta el padding */
     }
-  }
-  
+}

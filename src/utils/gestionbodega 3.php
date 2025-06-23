@@ -221,7 +221,7 @@ if (isset($_GET['save_qr']) && isset($_GET['content'])) {
                 
                 <div class="row mb-3">
                     <div class="col-12">
-                        <form method="post" class="card p-3 rounded-4 w-100 d-block" style="border: solid 2px #E4640D;">
+                        <form method="post" class="card p-3 rounded-4 w-100 d-block">
                             <div class="row gy-2 gx-3 align-items-center">
                                 <div class="col-auto">
                                     <label class="form-label" for="idInput" style="color:#5C6872;">ID de Voluntario:</label>
@@ -264,7 +264,7 @@ if (isset($_GET['save_qr']) && isset($_GET['content'])) {
                                             </div>
                                             <p style="color:#5C6872; font-weight:bold;"><?php echo htmlspecialchars($descripcion_producto); ?></p>
                                             <div class="modal-body">
-                                                <p>Por favor, indique si el ítem está limpio o no. Si lo esta de en CONFIRMAR</p>
+                                                <p>Por favor, indique si el ítem está limpio o no. Si lo está, haga clic en CONFIRMAR.</p>
                                             
                                             <button type="submit" class="btn btn-primary" name="action">Confirmar</button>
                                             <!-- <button type="button" class="btn btn-secondary">Cancelar</button> -->
@@ -313,7 +313,7 @@ if (isset($_GET['save_qr']) && isset($_GET['content'])) {
                             </div>
                         </div>
                     <?php else: ?>
-                        <p>Este voluntario no tiene sesionid voluntario.</p>
+                        <p>Este voluntario no tiene sesión id voluntario.</p>
                     <?php endif; ?>
                 <?php endif; ?>
             </div>

@@ -30,7 +30,7 @@ unset($_SESSION['codigo_item']);
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3" href="nuevoitem.php" style="text-align:center;">
+                            <a class="w-100 p-3" href="./nuevoItem/herramientas.php" style="text-align:center;">
                                 <img class="m-auto d-block" src="/public/ico/nuevo.png" style="height:120px; width: auto;">
                                 <h5 class="d-block" style="color:#5C6872;">Nuevo Item</h5>
                             </a>

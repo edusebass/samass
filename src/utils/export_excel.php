@@ -10,12 +10,12 @@ function obtener_inventario($conn) {
     $rol = $_SESSION['rol'];
     if ($rol == 2) {
         $query = "SELECT iditems, nombre, descripcion, estado_id, estado.descripcion, uso, seccion_id, ROUND(uso / 60) AS uso_minutos, observaciones, cantidad 
-                  FROM items 
-                  JOIN estado ON items.estado_id = estado.idestado WHERE seccion_id = 6;";
+                FROM items 
+                JOIN estado ON items.estado_id = estado.idestado WHERE seccion_id = 6;";
     } else {
         $query = "SELECT iditems, nombre, descripcion, estado_id, estado.descripcion, uso, seccion_id, ROUND(uso / 60) AS uso_minutos, observaciones, cantidad 
-                  FROM items 
-                  JOIN estado ON items.estado_id = estado.idestado;";
+                FROM items 
+                JOIN estado ON items.estado_id = estado.idestado;";
     }
 
     $stmt = $conn->prepare($query);

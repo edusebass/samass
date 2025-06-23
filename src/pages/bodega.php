@@ -23,7 +23,7 @@ unset($_SESSION['codigo_item']);
     <div class="row mb-3">
         <div class="col-md-6"> 
             <div class="w-100 bg-plomo mb-2 p-1"><b>BODEGA</b></div>
-            <div class="card rounded-4 p-2 align-items-stretch">
+            <div class="card d-flex rounded-4 p-2 align-items-stretch">
                 <div class="row justify-content-around align-items-center text-center">
                     <div class="col-sm-6 col-md-4">
                         <a class="w-100 p-3 " href="gestionbodega.php"> 
@@ -38,7 +38,7 @@ unset($_SESSION['codigo_item']);
                         </a>
                     </div>
                     <div class="col-sm-6 col-md-4">
-                        <a class="w-100 p-3 " href="nuevoitem.php">
+                        <a class="w-100 p-3 " href="./nuevoItem/herramientas.php">
                             <img class="m-auto d-block" src="/public/ico/nuevo.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                         <h5>Nuevo Item</h5>
                         </a>
@@ -57,7 +57,7 @@ unset($_SESSION['codigo_item']);
         <div class="col-md-6 "> 
             <div class="row mb-3">
                 <div class="w-100 bg-plomo mb-2 p-1"><b>COMPRAS</b></div>
-                <div class="card rounded-4 p-2">
+                <div class="card d-flex rounded-4 p-2">
                     <div class="row mt-3 p-1 justify-content-around align-items-center text-center">
                         <div class="col-sm-6 col-md-3 ">
                             <a class="w-100 p-3" href="compras.php"> 
@@ -76,7 +76,7 @@ unset($_SESSION['codigo_item']);
             </div>
             <div class="row mb-3">
                 <div class="w-100 bg-plomo mb-2 p-1"> <b>INFORMACIONES</b></div>
-                <div class="card rounded-4 p-2">
+                <div class="card d-flex rounded-4 p-2">
                     <div class="row my-1 justify-content-around">
                         <div class="col-12 py-adm-list-style">
                             <div class="d-inline-block px-3"> 
@@ -110,7 +110,7 @@ unset($_SESSION['codigo_item']);
                             <span class="text-break">Procesos de compras pendientes:</span> <b>#</b> 
                             </div>
                         </div> 
-                     </div>
+                    </div>
                 </div>
             </div>  
         </div>

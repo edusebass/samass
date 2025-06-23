@@ -369,10 +369,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
 
 
 ?>
-    <title>SAM Assistant</title>
-    <link rel="stylesheet" type="text/css" href="gestionBodega.css">
-</head>
-<body>
+
     <?php if ($error_mensaje): ?>
         <div class="alert alert-danger alert-dismissible fade show shadow position-fixed" style="top:50px; right:15px;" role="alert">
             <strong>Error</strong> <?php echo htmlspecialchars($error_mensaje); ?>
@@ -527,7 +524,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
             <div class="row">
                 <div class="col-12">
                     <div class="w-100 mb-2 p-1" style="text-align:left; background-color: #e8ecf2; color:#5C6872; text-transform:uppercase;">
-                        <b>Items (herramientas) no devueltos todavía</b>
+                        <b>Materiales no devueltos todavía</b>
                     </div>
                 </div>
             </div>
@@ -556,13 +553,13 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                 </div>
             </div>
         <?php else: ?>
-            <p>No hay herramientas asignadas.</p>
+            <p>No hay materiales asignados.</p>
         <?php endif; ?>
         <?php if (!empty($materiales_asignados)): ?>
             <div class="row">
                 <div class="col-12">
-                    <div class="w-100 mb-2 p-1" style="text-align:left; background-color: #e8ecf2; color:#5C6872; text-transform:uppercase;">
-                        <b>Materiales no devueltos todavía</b>
+                    <div class="w-100 my-2 p-1" style="text-align:left; background-color: #e8ecf2; color:#5C6872; text-transform:uppercase;">
+                        <b>Herramientas no devueltos todavía</b>
                     </div>
                 </div>
             </div>
@@ -589,7 +586,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
                 </div>
             </div>
         <?php else: ?>
-            <p>No hay materiales asignados.</p>
+            <p>No hay herramientas asignadas.</p>
         <?php endif; ?>
     <?php else: ?>
         <p>Este voluntario no tiene sesión activa.</p>

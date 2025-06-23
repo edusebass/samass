@@ -11,7 +11,7 @@ require './../utils/session_check.php';
 
     <?php require './../layout/header.php';?>
     <br>
-         <div class="tx" style="background-color: #e8ecf2;">
+        <div class="tx" style="background-color: #e8ecf2;">
             <strong>INVENTARIO</strong>
         </div>
         

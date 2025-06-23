@@ -10,9 +10,7 @@ unset($_SESSION['qr_content']);
 unset($_SESSION['id_voluntario']);
 unset($_SESSION['codigo_item']);
 ?>
-    <title>SAM Assistant</title>
-    </head>
-    <body>
+
     <div class="container-fluid">
         <?php
             $codigo = $_SESSION['codigo']; 

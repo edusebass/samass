@@ -86,25 +86,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn = null;
 }
 ?>
-<title>SAM Assistant</title>
 </head>
-<body>
+<main>
     <div class="login-form">
         <img src="/public/ico/logoSAM.png" alt="Logo SAM" style="width: 270px;">
         <h2>Login</h2>
+
         <?php if ($loginError): ?>
-            <p class="error"><?php echo htmlspecialchars($loginError); ?></p>
+            <p class="alert alert-warning"><?php echo htmlspecialchars($loginError); ?></p>
         <?php endif; ?>
         <?php if ($logoutMessage): ?>
-            <p style="color: green;"><?php echo htmlspecialchars($logoutMessage); ?></p>
+            <p class="alert alert-success"><?php echo htmlspecialchars($logoutMessage); ?></p>
         <?php endif; ?>
+
         <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-            <input type="text" name="username" placeholder="Usuario" required>
-            <input type="password" name="password" placeholder="Contraseña" required>
-            <input type="submit" value="Iniciar sesión">
+            <div class="form-group">
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <input type="submit" class="mb-2" value="Iniciar sesión">
         </form>
-        <div>Olvidé mi contraseña</div>
-    </div>
+        <a href="">Olvidé mi contraseña</a>
+        </div>
+</main>
     <?php require './../layout/footer.htm';?>
+
 </body>
 </html>

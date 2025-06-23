@@ -8,11 +8,8 @@ unset($_SESSION['qr_content']);
 unset($_SESSION['id_voluntario']);
 unset($_SESSION['codigo_item']);
 ?>
-    
-    <title>SAM Assistant</title>
-    </head>
-    <body>
-    <div class="container-fluid">
+
+    <main class="container-fluid">
             <?php
                 $codigo = $_SESSION['codigo']; 
                 if ($codigo == 'ADM' || $codigo == 'SU') {
@@ -23,23 +20,29 @@ unset($_SESSION['codigo_item']);
             <div class="col-md-6 ">
                 <div class="w-100 bg-plomo mb-2 p-1"><b>BODEGA</b></div>
                 <div class="card rounded-4 p-2">
-                    <div class="row justify-content-around align-items-center text-center">
-                        <div class="col-sm-6 col-md-4">
+                    <div class="row justify-content-around align-items-end text-center">
+                        <div class="col-sm-6 col-md-3">
                             <a class="w-100 p-3 " href="gestionbodega.php"> 
                                 <img class="m-auto d-block" src="/public/ico/bodega.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Operaciones</h5>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-md-4">
+                        <div class="col-sm-6 col-md-3">
                             <a class="w-100 p-3" href="compras.php">
                                 <img class="m-auto d-block" src="/public/ico/compras.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Compras</h5>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-md-4">
+                        <div class="col-sm-6 col-md-3">
                             <a class="w-100 p-3 " href="inventario.php">
                                 <img class="m-auto d-block" src="/public/ico/inventario.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Inventario</h5>
+                            </a>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <a class="w-100 p-3 " href="./nuevoItem/herramientas.php" >
+                                <img class="m-auto d-block" src="/public/ico/nuevo.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
+                                <h5>Nuevo Item</h5>
                             </a>
                         </div>
                     </div>
@@ -127,9 +130,9 @@ unset($_SESSION['codigo_item']);
                 </div>
             </div>
         </div>
-     </div>
-     <?php
-                 } else {
+    </main>
+    <?php
+                } else {
                     //A continuación código html en caso de que NO sea un administrador
         ?>
         <div class="row m-3">
@@ -139,14 +142,13 @@ unset($_SESSION['codigo_item']);
                     <div class="row">
 
                     </div>
-                    </div>
-          <?php
+                </div>
+        <?php
             } 
         ?>
 
-        <?php
-require './../layout/footer.htm';
-    ?>   
+        <?php require './../layout/footer.htm';?>   
+        
         <script src="js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 </body>
 </html>
