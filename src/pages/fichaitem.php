@@ -268,7 +268,12 @@ $photos = [
     <!-- Sección de Información -->
     <section class="row">
         <div class="col-12">
-            <div class="w-100 bg-plomo mb-2 p-1"><strong>INFORMACIÓN</strong></div>
+            <div class="w-100 bg-plomo mb-2 p-1 d-flex justify-content-between align-items-center">
+                <strong>INFORMACIÓN</strong>
+                <a href="/src/pages/nuevoItem/herramientas.php?tipo_item=herramientas&editar=1&codigo=<?= urlencode($item['codigo']) ?>" class="btn btn-warning btn-sm ms-2">
+                    Editar
+                </a>
+            </div>
             <div class="card rounded-4 px-1 mb-3">
                 <div class="row m-1">
                     <!-- Primera columna de información -->
@@ -426,6 +431,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     <?php endforeach; ?>
+
+    var params = new URLSearchParams(window.location.search);
+    var selectedValue = params.get("tipo_item");
+
+    if (selectedValue === "herramientas") {
+        herramientasFields?.classList.remove("d-none");
+    }
 });
 </script>
 

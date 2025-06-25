@@ -40,7 +40,7 @@ unset($_SESSION['codigo_item']);
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3 " href="./nuevoItem/herramientas.php" >
+                            <a class="w-100 p-3 " href="./form_item.php" >
                                 <img class="m-auto d-block" src="/public/ico/nuevo.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Nuevo Item</h5>
                             </a>

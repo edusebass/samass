@@ -1,4 +1,5 @@
 <?php
+session_start();
 require './../../vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -9,11 +10,11 @@ require_once './../db/dbconn.php';
 function obtener_inventario($conn) {
     $rol = $_SESSION['rol'];
     if ($rol == 2) {
-        $query = "SELECT iditems, nombre, descripcion, estado_id, estado.descripcion, uso, seccion_id, ROUND(uso / 60) AS uso_minutos, observaciones, cantidad 
+        $query = "SELECT items.iditems, items.nombre, items.descripcion AS item_descripcion, items.estado_id, estado.descripcion AS estado_descripcion, items.uso, items.seccion_id, ROUND(items.uso / 60) AS uso_minutos, items.observaciones, items.cantidad 
                 FROM items 
-                JOIN estado ON items.estado_id = estado.idestado WHERE seccion_id = 6;";
+                JOIN estado ON items.estado_id = estado.idestado WHERE items.seccion_id = 6;";
     } else {
-        $query = "SELECT iditems, nombre, descripcion, estado_id, estado.descripcion, uso, seccion_id, ROUND(uso / 60) AS uso_minutos, observaciones, cantidad 
+        $query = "SELECT items.iditems, items.nombre, items.descripcion AS item_descripcion, items.estado_id, estado.descripcion AS estado_descripcion, items.uso, items.seccion_id, ROUND(items.uso / 60) AS uso_minutos, items.observaciones, items.cantidad 
                 FROM items 
                 JOIN estado ON items.estado_id = estado.idestado;";
     }
@@ -42,8 +43,8 @@ $sheet->setCellValue('F1', 'Observaciones');
 $row = 2;
 foreach ($inventario as $item) {
     $sheet->setCellValue('A' . $row, $item['nombre']);
-    $sheet->setCellValue('B' . $row, $item['descripcion']);
-    $sheet->setCellValue('C' . $row, $item['descripcion']);
+    $sheet->setCellValue('B' . $row, $item['item_descripcion']);
+    $sheet->setCellValue('C' . $row, $item['estado_descripcion']);
     $sheet->setCellValue('D' . $row, $item['cantidad']);
     $sheet->setCellValue('E' . $row, round($item['uso'] / 60, 1) . ' horas');
     $sheet->setCellValue('F' . $row, $item['observaciones']);

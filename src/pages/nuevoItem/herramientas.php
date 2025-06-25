@@ -5,7 +5,7 @@ require './../../db/dbconn.php';
 require './../../utils/session_check.php';
 require_once './../../../library/phpqrcode/qrlib.php';
 $titlepage = 'nuevoitem';
-
+$esEdicion = isset($_GET['editar']) && $_GET['editar'] == 1;
 $docs = array_diff(scandir('./../../../docs/manuales'), array('.', '..'));
 function ejecutar_query($conn, $query, $params = []) {
     $stmt = $conn->prepare($query);
@@ -98,8 +98,6 @@ function generateQR($codigo) {
 $error_message = '';
 $qrGeneratedMessage = '';
 
-
-
 if (isset($_POST['submit_item'])) {
     // Validar que los campos necesarios estén presentes para herramientas.
     if (empty($_POST['codigo']) || 
@@ -190,34 +188,47 @@ if (isset($_POST['submit_item'])) {
             // Generación de QR
             $qrData = generateQR($_POST['codigo']);  
 
-            // Inserción en la tabla items
-            $query = "INSERT INTO items (nombre, descripcion, estado_id, costo, fecha, vida, observaciones, seccion_id, categoria_id, area_id, elemento_id, codigo, qr_image_path, fabricante, serial, año_fabricacion, id_fuentepoder, modelo, valor_residual, grupo_id, foto_path, cantidad) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
-            
-            // Convertir vida a horas, calcular valor residual y validar campos numéricos, etc.
-            $vida = intval($_POST['vida']);
-            $vida_util_en_horas = $vida * 720;
-            $cantidad = intval($_POST['cantidad']);
-            $costo = floatval($_POST['costo']);
-            $valor_residual = round($costo * 0.20, 2); // Calcula el valor residual
-            
+            // Si es edición, haz UPDATE
+            if (isset($_GET['editar']) && $_GET['editar'] == 1 && !empty($_GET['codigo'])) {
+                $query = "UPDATE items SET nombre=?, descripcion=?, estado_id=?, costo=?, fecha=?, vida=?, observaciones=?, seccion_id=?, categoria_id=?, area_id=?, elemento_id=?, qr_image_path=?, fabricante=?, serial=?, año_fabricacion=?, id_fuentepoder=?, modelo=?, valor_residual=?, grupo_id=?, foto_path=?, cantidad=? WHERE codigo=?";
+                $params = [
+                    $_POST['nombre'], $_POST['descripcion'], $_POST['estado_id'],
+                    floatval($_POST['costo']), $_POST['fecha'],
+                    intval($_POST['vida']) * 720,
+                    $_POST['observaciones'], $_POST['seccion_id'],
+                    $_POST['categoria_id'], $_POST['area_id'], $_POST['elemento_id'],
+                    $qrData['path'], $_POST['fabricante'], $_POST['serial'],
+                    $_POST['año_fabricacion'], $_POST['id_fuentepoder'], $_POST['modelo'],
+                    round(floatval($_POST['costo']) * 0.20, 2), $grupo_id, $foto_path,
+                    intval($_POST['cantidad']),
+                    $_POST['codigo'] // WHERE
+                ];
+            } else {
+                // Inserción en la tabla items
+                $query = "INSERT INTO items (nombre, descripcion, estado_id, costo, fecha, vida, observaciones, seccion_id, categoria_id, area_id, elemento_id, codigo, qr_image_path, fabricante, serial, año_fabricacion, id_fuentepoder, modelo, valor_residual, grupo_id, foto_path, cantidad) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
                 
-            $params = [
-                $_POST['nombre'], $_POST['descripcion'], $_POST['estado_id'],
-                $costo, $_POST['fecha'],
-                $vida_util_en_horas, 
-                $_POST['observaciones'], $_POST['seccion_id'], 
-                $_POST['categoria_id'], $_POST['area_id'], $_POST['elemento_id'],
-                $qrData['code'], $qrData['path'], $_POST['fabricante'], $_POST['serial'], 
-                $_POST['año_fabricacion'], $_POST['id_fuentepoder'], $_POST['modelo'], 
-                $valor_residual, $grupo_id, $foto_path
-            ];
-
-            // error_log($_POST['estado_id']);
-            // return;
+                // Convertir vida a horas, calcular valor residual y validar campos numéricos, etc.
+                $vida = intval($_POST['vida']);
+                $vida_util_en_horas = $vida * 720;
+                $cantidad = intval($_POST['cantidad']);
+                $costo = floatval($_POST['costo']);
+                $valor_residual = round($costo * 0.20, 2); // Calcula el valor residual
+                
+                    
+                $params = [
+                    $_POST['nombre'], $_POST['descripcion'], $_POST['estado_id'],
+                    $costo, $_POST['fecha'],
+                    $vida_util_en_horas, 
+                    $_POST['observaciones'], $_POST['seccion_id'], 
+                    $_POST['categoria_id'], $_POST['area_id'], $_POST['elemento_id'],
+                    $qrData['code'], $qrData['path'], $_POST['fabricante'], $_POST['serial'], 
+                    $_POST['año_fabricacion'], $_POST['id_fuentepoder'], $_POST['modelo'], 
+                    $valor_residual, $grupo_id, $foto_path
+                ];
+            }
 
             ejecutar_query($conn, $query, $params);
-
             $conn->commit();
             
 
@@ -238,6 +249,15 @@ if (isset($_POST['submit_item'])) {
             $error_message ="Hubo un error al insertar el item: " . htmlspecialchars($e->getMessage());
         }
     }
+}
+
+// Si viene en modo edición, precarga los datos
+$datos_editar = null;
+if (isset($_GET['editar']) && $_GET['editar'] == 1 && !empty($_GET['codigo'])) {
+    $codigo_editar = $_GET['codigo'];
+    $stmt = $conn->prepare("SELECT * FROM items WHERE codigo = ?");
+    $stmt->execute([$codigo_editar]);
+    $datos_editar = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Definición de los campos
@@ -293,11 +313,11 @@ if (!empty($errores)) {
 }
 
 // Función para renderizar los inputs de forma homogénea
-function renderInput($name, $details) {
+function renderInput($name, $details, $datos_editar = null) {
     $label = $details['label'];
     $type = $details['type'];
-    // $required = isset($details['required']) && $details['required'] ? 'required' : '';
-    $step = isset($details['step']) ? "step='{$details['step']}'" : ''; // Para manejar decimales
+    $step = isset($details['step']) ? "step='{$details['step']}'" : '';
+    $value = $datos_editar[$name] ?? '';
 
     $html = "<div class='row pb-2'>
                 <div class='col-5 d-flex align-items-start detail-row'>
@@ -308,18 +328,19 @@ function renderInput($name, $details) {
     if ($type == 'select') {
         $options = $details['options'] ?? [];
         $html .= "<select class='form-select' id='$name' name='$name' required>
-                    <option value='0' selected>Elegir una opción</option>";
+                    <option value='0'>Elegir una opción</option>";
         foreach ($options as $option) {
             $keys = array_keys($option);
-            $value = $option[$keys[0]];
+            $option_value = $option[$keys[0]];
             $text = $option[$keys[1]];
-            $html .= "<option value='$value'>$text</option>";
+            $selected = ($option_value == $value) ? "selected" : "";
+            $html .= "<option value='$option_value' $selected>$text</option>";
         }
         $html .= "</select>";
     } elseif ($type == 'textarea') {
-        $html .= "<textarea id='$name' class='form-control' maxlength='255' name='$name' required></textarea>";
+        $html .= "<textarea id='$name' class='form-control' maxlength='255' name='$name' required>$value</textarea>";
     } else {
-        $html .= "<input type='$type' min='1' $step class='form-control border-2 rounded-3' maxlength='45' id='$name' name='$name' required>";
+        $html .= "<input type='$type' min='1' $step class='form-control border-2 rounded-3' maxlength='45' id='$name' name='$name' value='" . htmlspecialchars($value) . "' required>";
     }
 
     $html .= "  </div>
@@ -331,6 +352,7 @@ function renderInput($name, $details) {
         <h5 class="w-100 mb-2 bg-plomo p-2"><B>INSERTAR NUEVO ITEM</B></h5>
         <form method="POST" class="px-3" enctype="multipart/form-data" onsubmit="return validateForm()">
         <!-- Selección de OPCIÓN -->
+        <?php if (!$esEdicion): ?>
             <div class="row py-1">
                 <div class="col-12">
                     <div class="mb-3 pt-3">
@@ -343,6 +365,8 @@ function renderInput($name, $details) {
                     </div>
                 </div>
             </div>
+        <?php endif; ?>
+
                 <?php if (!empty($error_message)): ?>
                     <div class="col-12 col-lg-6 alert alert-danger alert-dismissible fade show d-flex justify-content-between" role="alert">
                         <strong>Error:</strong> <?php echo $error_message; ?>
@@ -365,18 +389,18 @@ function renderInput($name, $details) {
                                 <!-- Primera columna: CÓDIGO, NOMBRE, DESCRIPCIÓN -->
                                 <div class="col-12 col-sm-6 d-flex flex-column position-relative pt-2">
                                     <?php
-                                    echo renderInput('codigo', $campos['codigo']);
-                                    echo renderInput('nombre', $campos['nombre']);
-                                    echo renderInput('descripcion', $campos['descripcion']);
-                                    echo renderInput('area_id', $campos['area_id']);
+                                    echo renderInput('codigo', $campos['codigo'], $datos_editar);
+                                    echo renderInput('nombre', $campos['nombre'], $datos_editar);
+                                    echo renderInput('descripcion', $campos['descripcion'], $datos_editar);
+                                    echo renderInput('area_id', $campos['area_id'], $datos_editar);
                                     ?>
                                 </div>
                                 <!-- Segunda columna: TIPO ELEMENTO, ESTADO, CANTIDAD y la imagen -->
                                 <div class="col-12 col-sm-6 d-flex flex-column position-relative pt-2 pb-1">
                                     <?php
-                                    echo renderInput('elemento_id', $campos['elemento_id']);
-                                    echo renderInput('estado_id', $campos['estado_id']);
-                                    echo renderInput('cantidad', $campos['cantidad']);
+                                    echo renderInput('elemento_id', $campos['elemento_id'], $datos_editar);
+                                    echo renderInput('estado_id', $campos['estado_id'], $datos_editar);
+                                    echo renderInput('cantidad', $campos['cantidad'], $datos_editar);
                                     ?>
                                     <div class="row py-2 d-flex ">
                                         <!-- Campo de selección de imagen -->
@@ -404,32 +428,32 @@ function renderInput($name, $details) {
                                 <!-- Columna 1 -->
                                 <div class="col detail-row separation-edge pt-2">
                                     <?php
-                                    echo renderInput('costo', $campos['costo']);
-                                    echo renderInput('fecha', $campos['fecha']);
-                                    echo renderInput('vida', $campos['vida']);
+                                    echo renderInput('costo', $campos['costo'], $datos_editar);
+                                    echo renderInput('fecha', $campos['fecha'], $datos_editar);
+                                    echo renderInput('vida', $campos['vida'], $datos_editar);
                                     ?>
                                 </div>
                             <!-- Columna 2 -->
                                 <div class="col detail-row separation-edge pt-2">
                                     <?php
-                                    echo renderInput('seccion_id', $campos['seccion_id']);
-                                    echo renderInput('categoria_id', $campos['categoria_id']);
-                                    echo renderInput('observaciones', $campos['observaciones']);
+                                    echo renderInput('seccion_id', $campos['seccion_id'], $datos_editar);
+                                    echo renderInput('categoria_id', $campos['categoria_id'], $datos_editar);
+                                    echo renderInput('observaciones', $campos['observaciones'], $datos_editar);
                                     ?>
                                 </div>
                                 <!-- Columna 3 -->
                                 <div class="col detail-row separation-edge pt-2">
                                     <?php
-                                    echo renderInput('fabricante', $campos['fabricante']);
-                                    echo renderInput('serial', $campos['serial']);
-                                    echo renderInput('modelo', $campos['modelo']);
+                                    echo renderInput('fabricante', $campos['fabricante'], $datos_editar);
+                                    echo renderInput('serial', $campos['serial'], $datos_editar);
+                                    echo renderInput('modelo', $campos['modelo'], $datos_editar);
                                     ?>
                                 </div>
                                 <!-- Columna 4 -->
                                 <div class="col detail-row pt-2">
                                     <?php
-                                    echo renderInput('año_fabricacion', $campos['año_fabricacion']);
-                                    echo renderInput('id_fuentepoder', $campos['id_fuentepoder']);
+                                    echo renderInput('año_fabricacion', $campos['año_fabricacion'], $datos_editar);
+                                    echo renderInput('id_fuentepoder', $campos['id_fuentepoder'], $datos_editar);
                                     ?>
                                 </div>
                             </div>
@@ -534,7 +558,9 @@ function renderInput($name, $details) {
             </section>
             <div id="alertaError" class="alert alert-danger d-none" role="alert">
             </div>
-            <button class="my-3 btn btn-primary" type="submit" name="submit_item">Insertar Item</button>
+            <button class="my-3 btn btn-primary" type="submit" name="submit_item">
+                <?php echo isset($_GET['editar']) ? 'Guardar Cambios' : 'Insertar Item'; ?>
+            </button>
         </form>
     </div>
     <?php require './../../layout/footer.htm'; ?>
