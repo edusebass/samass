@@ -152,7 +152,13 @@ if ($id) {
 function renderInput($campo, $tipo, $valor, $tabla = '', $codigo = '') {
     $label = ucwords(str_replace('_', ' ', $campo));
     $valor = htmlspecialchars($valor ?? '');
-    // Si es fotografia_url, mostrar input file y previsualización si hay imagen
+
+    // Define aquí los campos opcionales (puedes agregar más si lo deseas)
+    $opcionales = ['observaciones', 'observaciones_bas', 'observaciones_secretaria_om', 'fotografia_url', 'detalles_adicionales', 'tiempo_uso'];
+
+    // Todos los demás serán obligatorios
+    $required = !in_array($campo, $opcionales) ? 'required' : '';
+
     if ($campo === 'fotografia_url') {
         $preview = '';
         if ($valor) {
@@ -160,28 +166,29 @@ function renderInput($campo, $tipo, $valor, $tabla = '', $codigo = '') {
         }
         return "<div class='mb-3'><label class='form-label'>$label</label>
             $preview
-            <input type='file' class='form-control' name='fotografia_url' accept='image/*'></div>";
+            <input type='file' class='form-control' name='fotografia_url' accept='image/*' $required></div>";
     }
     switch ($tipo) {
         case 'textarea':
             return "<div class='mb-3'><label class='form-label'>$label</label>
-                <textarea class='form-control' name='$campo'>$valor</textarea></div>";
+                <textarea class='form-control' name='$campo' $required>$valor</textarea></div>";
         case 'number':
             return "<div class='mb-3'><label class='form-label'>$label</label>
-                <input type='number' class='form-control' name='$campo' value='$valor'></div>";
+                <input type='number' class='form-control' name='$campo' value='$valor' $required></div>";
         case 'decimal':
             return "<div class='mb-3'><label class='form-label'>$label</label>
-                <input type='number' step='0.01' class='form-control' name='$campo' value='$valor'></div>";
+                <input type='number' step='0.01' class='form-control' name='$campo' value='$valor' $required></div>";
         case 'year':
             return "<div class='mb-3'><label class='form-label'>$label</label>
-                <input type='number' min='1900' max='2100' class='form-control' name='$campo' value='$valor'></div>";
+                <input type='number' min='1900' max='2100' class='form-control' name='$campo' value='$valor' $required></div>";
         case 'checkbox':
             $checked = $valor ? 'checked' : '';
+            // Los checkbox normalmente no son required, pero puedes agregarlo si lo deseas
             return "<div class='mb-3 form-check'><input type='checkbox' class='form-check-input' name='$campo' value='1' $checked>
                 <label class='form-check-label'>$label</label></div>";
         default:
             return "<div class='mb-3'><label class='form-label'>$label</label>
-                <input type='text' class='form-control' name='$campo' value='$valor'></div>";
+                <input type='text' class='form-control' name='$campo' value='$valor' $required></div>";
     }
 }
 
@@ -249,6 +256,7 @@ if ($id) {
         <?php foreach ($campos as $campo => $tipo): ?>
             <?php
             if ($campo === 'codigo') continue; // No mostrar el input de código nunca
+            if ($id && $campo === 'codigo_item') continue; // No mostrar codigo_item en edición
             // Pasar tabla y código para renderInput solo si es fotografia_url
             if ($campo === 'fotografia_url') {
                 echo renderInput($campo, $tipo, $datos[$campo] ?? '', $tabla, $datos['codigo'] ?? '');

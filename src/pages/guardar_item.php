@@ -191,6 +191,17 @@ if ($id) {
         $ruta_imagen = $ruta_relativa;
     }
 
+    foreach ($campos as $campo => $tipo) {
+    if ($tipo === 'decimal') {
+        // Si está vacío o no numérico, pon null
+        if (!isset($valores[$campo]) || trim($valores[$campo]) === '' || $valores[$campo] === '-' || !is_numeric(str_replace(['$', ','], '', $valores[$campo]))) {
+            $valores[$campo] = null;
+        } else {
+            // Limpiar $ y comas
+            $valores[$campo] = str_replace(['$', ','], '', $valores[$campo]);
+        }
+    }
+}
     $valores = array_merge(['codigo' => $codigo_auto], $valores, ['fotografia_url' => $ruta_imagen]);
     $cols = implode(', ', array_keys($valores));
     $placeholders = implode(', ', array_fill(0, count($valores), '?'));

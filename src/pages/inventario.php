@@ -17,27 +17,27 @@ function obtener_datos_tabla($conn, $tabla, $campos) {
 $tablas = [
     'equipo_seguridad' => [
         'label' => 'Equipo de Seguridad',
-        'campos' => 'id, descripcion, unidad_medida, cantidad, costo_unitario_estimado, marca, modelo, estado_actual, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
+        'campos' => 'id, codigo, descripcion, unidad_medida, cantidad, costo_unitario_estimado, marca, modelo, estado_actual, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
     ],
     'habitacion_huesped_betel' => [
         'label' => 'Habitación Huésped Betel',
-        'campos' => 'id, descripcion, unidad_medida, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
+        'campos' => 'id, codigo, descripcion, unidad_medida, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
     ],
     'herramientas_equipo_jardineria' => [
         'label' => 'Herr. y Equipo Jardinería',
-        'campos' => 'id, descripcion, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, estado_actual, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
+        'campos' => 'id, codigo, descripcion, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, estado_actual, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
     ],
     'herramientas_manuales' => [
         'label' => 'Herramientas Manuales',
-        'campos' => 'id, descripcion, cantidad, costo_unitario_estimado, marca, estado_actual, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
+        'campos' => 'id, codigo, descripcion, cantidad, costo_unitario_estimado, marca, estado_actual, anio_adquisicion, vida_util_sugerida, fotografia_url, observaciones'
     ],
     'maquinas' => [
         'label' => 'Máquinas',
-        'campos' => 'id, descripcion, unidad_medida, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, estado_actual, reparado, costo_reparacion, anio_adquisicion, vida_util_anios, garantia_fabricante, fotografia_url, observaciones'
+        'campos' => 'id, codigo, descripcion, unidad_medida, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, estado_actual, reparado, costo_reparacion, anio_adquisicion, vida_util_anios, garantia_fabricante, fotografia_url, observaciones'
     ],
     'items_generales_por_edificio' => [
         'label' => 'Items generales por edificio',
-        'campos' => 'id, nombre_elemento, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, detalles_adicionales, estado_actual, lugar_almacenamiento, anio_adquisicion, vida_util_sugerida, tiempo_uso, costo_mantenimiento_mensual, observaciones_bas, observaciones_secretaria_om'
+        'campos' => 'id, codigo, nombre_elemento, cantidad, costo_unitario_estimado, marca, modelo, numero_serie, detalles_adicionales, estado_actual, lugar_almacenamiento, anio_adquisicion, vida_util_sugerida, tiempo_uso, costo_mantenimiento_mensual, observaciones_bas, observaciones_secretaria_om'
     ]
 ];
 
@@ -57,7 +57,7 @@ $columnas = array_keys($datos[0] ?? []);
 <main class="container-fluid mt-3">
     <?php require_once './../utils/breadcrumbs.php';
     $breadcrumbs = [
-        ['label' => 'Inicio', 'url' => '/inicio.php'],
+        ['label' => 'Inicio', 'url' => '/src/pages/admin.php'],
         ['label' => 'Inventario', 'url' => null]
     ];
     render_breadcrumbs($breadcrumbs, '/');
@@ -132,6 +132,8 @@ $columnas = array_keys($datos[0] ?? []);
         <button type="submit" class="btn btn-primary">Exportar tabla a Excel</button>
     </form>
 </div>
+
+<a href="carga_masiva.php" class="btn btn-primary mb-2">Carga masiva desde Excel</a>
 
 <!-- JS y Footer -->
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
