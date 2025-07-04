@@ -104,16 +104,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="username">Usuario:</label>
                 <input type="text" id="username" name="username" class="form-control" required>
             </div>
-            <div class="form-group">
-                <label for="password">Contraseña:</label>
-                <input type="password" id="password" name="password" class="form-control" required>
-            </div>
+<div class="mb-3">
+    <label for="password" class="form-label">Contraseña</label>
+    <div class="input-group" style="align-items: center;">
+        <input type="password" id="password" name="password" class="form-control" required 
+               style="height: 50px; border-right: none; font-size: 1rem;">
+        <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
+                id="togglePassword" 
+                style="height: 50px; width: 46px; border-left: none; border-radius: 0 0.375rem 0.375rem 0; padding: 0;">
+            <i class="bi bi-eye" style="font-size: 1.1rem;"></i>
+        </button>
+    </div>
+</div>
             <input type="submit" class="mb-2" value="Iniciar sesión">
         </form>
-        <a href="">Olvidé mi contraseña</a>
-        </div>
+        <a href="#" onclick="showForgotPasswordAlert()">Olvidé mi contraseña</a>
+    </div>
 </main>
-    <?php require './../layout/footer.htm';?>
+
+<!-- SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Mostrar/ocultar contraseña
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordField = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+});
+
+// Función para recuperación de contraseña (existente)
+function showForgotPasswordAlert() {
+    Swal.fire({
+        title: 'Recuperación de contraseña',
+        text: 'Póngase en contacto con el Administrador o el Capitán del día',
+        icon: 'info',
+        confirmButtonText: 'Entendido'
+    });
+}
+</script>
+
+<?php require './../layout/footer.htm';?>
 
 </body>
 </html>

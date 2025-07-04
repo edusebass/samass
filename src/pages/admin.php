@@ -149,6 +149,7 @@ unset($_SESSION['codigo_item']);
 
         <?php require './../layout/footer.htm';?>   
         
+      <script src="/src/utils/inactivity_warning.js"></script>
         <script src="js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 </body>
 </html>

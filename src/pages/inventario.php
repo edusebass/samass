@@ -1,4 +1,35 @@
 <?php
+/**
+ * Inventario - Vista principal de inventario con pestañas por tabla
+ *
+ * Descripción:
+ * Muestra el inventario de diferentes categorías (tablas) en pestañas. Permite crear, editar y eliminar registros,
+ * así como exportar a Excel y realizar carga masiva desde un archivo Excel.
+ *
+ * Funcionalidades:
+ * - Navegación por pestañas para cada tabla de inventario.
+ * - Visualización de registros con paginación y búsqueda (DataTables).
+ * - Botón para crear nuevo registro (redirige a formulario dinámico).
+ * - Botones para editar y eliminar cada registro.
+ * - Exportación de la tabla activa a Excel.
+ * - Carga masiva de datos desde Excel (una hoja por tabla).
+ *
+ * Variables principales:
+ * - $tablas: array de configuración de cada tabla (nombre, campos, label).
+ * - $tabla_activa: string, tabla actualmente seleccionada.
+ * - $datos: array, registros de la tabla activa.
+ * - $columnas: array, nombres de columnas de la tabla activa.
+ *
+ * Dependencias:
+ * - DataTables (JS y CSS)
+ * - Bootstrap (JS y CSS)
+ * - PhpSpreadsheet (para carga masiva)
+ * - Otros archivos: form_item.php, eliminar_item.php, export_excel.php, carga_masiva.php
+ *
+ * Seguridad:
+ * - Requiere sesión activa (session_check.php)
+ * - Escapa todos los valores mostrados con htmlspecialchars
+ */
 require './../layout/head.html';
 require './../layout/header.php';
 require './../utils/session_check.php';
