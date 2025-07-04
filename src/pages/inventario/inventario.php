@@ -27,13 +27,22 @@
  * - Otros archivos: form_item.php, eliminar_item.php, export_excel.php, carga_masiva.php
  *
  * Seguridad:
- * - Requiere sesión activa (session_check.php)
- * - Escapa todos los valores mostrados con htmlspecialchars
+<?php
+/**
+ * Inventario - Vista principal de inventario con pestañas por tabla
+ *
+ * Descripción:
+ * Muestra el inventario de diferentes categorías (tablas) en pestañas. Permite crear, editar y eliminar registros,
+ * así como exportar a Excel y realizar carga masiva desde un archivo Excel.
+ *
+ * @author  SAM Assistant Team
+ * @version 1.0
+ * @since   2025-07-04
  */
-require './../layout/head.html';
-require './../layout/header.php';
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
 
 /**
  * Devuelve los datos de una tabla como array asociativo.
@@ -86,9 +95,9 @@ $columnas = array_keys($datos[0] ?? []);
 ?>
 
 <main class="container-fluid mt-3">
-    <?php require_once './../utils/breadcrumbs.php';
+    <?php require_once './../../utils/breadcrumbs.php';
     $breadcrumbs = [
-        ['label' => 'Inicio', 'url' => '/src/pages/admin.php'],
+        ['label' => 'Inicio', 'url' => '/src/pages/dashboard/index.php'],
         ['label' => 'Inventario', 'url' => null]
     ];
     render_breadcrumbs($breadcrumbs, '/');
@@ -158,11 +167,11 @@ $columnas = array_keys($datos[0] ?? []);
     </div>
 </main>
 
-<div class="container-fluid m-3 pl-4">
-    <form action="./../utils/export_excel.php" method="post">
+<!-- <div class="container-fluid m-3 pl-4">
+    <form action="./../../utils/export_excel.php" method="post">
         <button type="submit" class="btn btn-primary">Exportar tabla a Excel</button>
     </form>
-</div>
+</div> -->
 
 <a href="carga_masiva.php" class="btn btn-primary mb-2">Carga masiva desde Excel</a>
 
@@ -186,6 +195,6 @@ $columnas = array_keys($datos[0] ?? []);
         });
     });
 </script>
-<?php require './../layout/footer.htm'; ?>
+<?php require './../../layout/footer.htm'; ?>
 </body>
 </html>

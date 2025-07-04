@@ -1,4 +1,15 @@
 <?php
+/**
+ * Session Check - Gestión de sesiones y autenticación
+ * 
+ * Utilidad para verificar y gestionar sesiones de usuario,
+ * incluyendo timeout, validación y redirecciones.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -30,7 +41,7 @@ function checkSessionTimeout() {
         session_destroy(); // Destruir la sesión
 
         // Redirigir al login con un mensaje de sesión expirada
-        header("Location: /src/pages/login.php?expired=1");
+        header("Location: /src/pages/auth/login.php?expired=1");
         exit();
     }
 
@@ -50,7 +61,7 @@ function redirectBasedOnSession() {
     if (!isLoggedIn()) {
         // Si no hay sesión activa y no estamos en login.php, redirigir al login
         if ($currentPage !== 'login.php') {
-            header("Location: ./../pages/login.php");
+            header("Location: ./../pages/auth/login.php");
             exit();
         }
     } else {

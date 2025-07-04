@@ -1,8 +1,20 @@
 <?php 
+/**
+ * Página de Inicio de Sesión
+ * 
+ * Página principal de autenticación para el sistema SAM Assistant.
+ * Maneja la autenticación de usuarios, validación de credenciales,
+ * gestión de sesiones y redirección según el rol del usuario.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 session_start();
-require './../layout/head.html';
-require './../layout/header.php';
-require './../db/dbconn.php';
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../db/dbconn.php';
 
 function ejecutar_query($conn, $query, $params = []) {
     $stmt = $conn->prepare($query);
@@ -72,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ejecutar_query($conn, $query_ultima_conexion, [$id_usuario]);
 
                 login($user);
-                header("Location: ./../utils/Redirect.php");
+                header("Location: ./../../utils/Redirect.php");
                 exit();
             } else {
                 setMessage($loginError, "Cuenta inactiva. Por favor, contacte al administrador.");
@@ -152,7 +164,7 @@ function showForgotPasswordAlert() {
 }
 </script>
 
-<?php require './../layout/footer.htm';?>
+<?php require './../../layout/footer.htm';?>
 
 </body>
 </html>

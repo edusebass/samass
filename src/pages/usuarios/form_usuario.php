@@ -35,10 +35,10 @@
  * - Campos sensibles protegidos en modo visualización.
  * - Validación de datos antes de generar contraseñas.
  */
-require './../layout/head.html';
-require './../layout/header.php';
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
 
 // Get mode (view or edit)
 $mode = $_GET['mode'] ?? 'edit'; // Por defecto edit para nuevos registros
@@ -245,4 +245,4 @@ document.getElementById('toggle-pwd-view')?.addEventListener('click', function()
 });
 </script>
 
-<?php require './../layout/footer.htm'; ?>
+<?php require './../../layout/footer.htm'; ?>

@@ -1,10 +1,29 @@
 <?php
+/**
+ * Bodega - Dashboard principal de operaciones de bodega
+ * 
+ * Descripción:
+ * Panel principal que muestra las opciones de gestión de bodega, inventario, 
+ * compras e información del sistema en tiempo real.
+ * 
+ * Funcionalidades:
+ * - Enlaces a gestión de operaciones de bodega
+ * - Acceso rápido al inventario
+ * - Creación de nuevos items
+ * - Gestión de compras y pedidos
+ * - Dashboard informativo con estadísticas
+ * 
+ * @author  SAM Assistant Team
+ * @version 1.0
+ * @since   2025-07-04
+ */
+
 // Incluir archivos necesarios
 try {
-    require './../layout/head.html';
-    include('./../utils/verificar_rol.php');
-    require './../layout/header.php';
-    require './../utils/session_check.php';
+    require './../../layout/head.html';
+    include('./../../utils/verificar_rol.php');
+    require './../../layout/header.php';
+    require './../../utils/session_check.php';
 } catch (Exception $e) {
     // Manejar errores
     echo "Error: " . $e->getMessage();
@@ -27,19 +46,19 @@ unset($_SESSION['codigo_item']);
             <div class="card d-flex rounded-4 p-2 align-items-stretch">
                 <div class="row justify-content-around align-items-center text-center">
                     <div class="col-sm-6 col-md-4">
-                        <a class="w-100 p-3 " href="gestionbodega.php"> 
+                        <a class="w-100 p-3 " href="gestionBodega.php"> 
                             <img class="m-auto d-block" src="/public/ico/bodega.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                         <h5>Operaciones</h5>
                         </a>
                     </div>
                     <div class="col-sm-6 col-md-4">
-                        <a class="w-100 p-3 " href="inventario.php">
+                        <a class="w-100 p-3 " href="../inventario/inventario.php">
                             <img class="m-auto d-block" src="/public/ico/inventario.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                         <h5>Inventario</h5>
                         </a>
                     </div>
                     <div class="col-sm-6 col-md-4">
-                        <a class="w-100 p-3 " href="./nuevoItem/herramientas.php">
+                        <a class="w-100 p-3 " href="../inventario/form_item.php">
                             <img class="m-auto d-block" src="/public/ico/nuevo.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                         <h5>Nuevo Item</h5>
                         </a>
@@ -47,7 +66,7 @@ unset($_SESSION['codigo_item']);
                 </div>
                 <div class="row text-center">
                     <div class="col-sm-6 col-md-4">
-                        <a class="w-100 p-3 " href="">
+                        <a class="w-100 p-3 " href="../informes/">
                             <img class="m-auto d-block" src="/public/ico/report.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                         <h5>Informes</h5>
                         </a>
@@ -61,13 +80,13 @@ unset($_SESSION['codigo_item']);
                 <div class="card d-flex rounded-4 p-2">
                     <div class="row mt-3 p-1 justify-content-around align-items-center text-center">
                         <div class="col-sm-6 col-md-3 ">
-                            <a class="w-100 p-3" href="compras.php"> 
+                            <a class="w-100 p-3" href="../compras/compras.php"> 
                                 <img class="m-auto" src="/public/ico/compras.svg" style="height:auto; max-height: 100px; width: 100%; max-width: 100px; min-width:60px;">
                                 <h5>Pedido</h5>
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3 ">
-                            <a class="w-100 p-3" href=""> 
+                            <a class="w-100 p-3" href="../compras/"> 
                                 <img class="m-auto" src="/public/ico/recepcion.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Recepción</h5>
                             </a>
@@ -119,8 +138,8 @@ unset($_SESSION['codigo_item']);
 </div>
 
 <?php
-require './../layout/footer.htm';
-    ?>   
+require './../../layout/footer.htm';
+?>   
         <script src="js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 </body>
 </html>

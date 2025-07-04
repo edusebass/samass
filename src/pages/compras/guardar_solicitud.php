@@ -1,9 +1,20 @@
+/**
+ * Guardar Solicitud - Procesamiento de solicitudes de compra
+ * 
+ * Script para procesar y guardar solicitudes de compra
+ * enviadas por los usuarios del sistema.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: voluntario.php');
+    header('Location: ../usuarios/voluntario.php');
     exit;
 }
 

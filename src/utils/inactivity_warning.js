@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'HEAD',
             cache: 'no-store'
         }).then(response => {
-            if (response.redirected && response.url.includes('login.php?expired=1')) {
+            if (response.redirected && response.url.includes('auth/login.php?expired=1')) {
                 logoutNow();
             }
         });

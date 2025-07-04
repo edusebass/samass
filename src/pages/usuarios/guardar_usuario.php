@@ -31,8 +31,8 @@
  * - Consideración: Uso de md5() para hashing (se recomienda password_hash() en producción).
  */
 
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: usuarios.php');

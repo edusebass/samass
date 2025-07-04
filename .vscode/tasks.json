@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Verificar estructura modular",
+			"type": "shell",
+			"command": "dir",
+			"args": [
+				"src\\pages",
+				"/s"
+			],
+			"group": "test"
+		}
+	]
+}

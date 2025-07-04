@@ -1,3 +1,14 @@
+/**
+ * Escáner QR - Funcionalidad de escaneo de códigos QR
+ * 
+ * Utilidad para manejar el escaneo de códigos QR
+ * en el sistema de bodega.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
 // escaner-qr.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

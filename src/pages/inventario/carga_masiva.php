@@ -1,9 +1,20 @@
 <?php
-require './../layout/head.html';
-require './../layout/header.php';
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
-require_once __DIR__ . '/../../vendor/autoload.php'; // Ajusta el path si es necesario
+/**
+ * Carga Masiva - Importación desde Excel
+ * 
+ * Permite cargar datos masivamente desde archivos Excel al inventario.
+ * Procesa múltiples hojas y valida los datos antes de insertarlos.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
+require_once './../../../vendor/autoload.php'; // Ruta corregida al vendor
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -314,4 +325,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
         En <b>items_generales_por_edificio</b> el campo <b>codigo</b> debe venir en el Excel, en las demás se generará automáticamente.
     </div>
 </main>
-<?php require './../layout/footer.htm'; ?>
+<?php require './../../layout/footer.htm'; ?>

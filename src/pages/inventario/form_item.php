@@ -1,8 +1,19 @@
 <?php
-require './../layout/head.html';
-require './../layout/header.php';
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
+/**
+ * Form Item - Formulario dinámico para crear/editar items de inventario
+ *
+ * Descripción:
+ * Formulario universal que se adapta a cualquier tabla de inventario.
+ * Genera campos dinámicamente según el tipo de tabla seleccionada.
+ *
+ * @author  SAM Assistant Team
+ * @version 1.0
+ * @since   2025-07-04
+ */
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
 
 // Definición de los campos y tipos por tabla
 $tablas_campos = [
@@ -121,7 +132,7 @@ if (!isset($_GET['tabla'])) {
         </form>
     </main>
     <?php
-    require './../layout/footer.htm';
+    require './../../layout/footer.htm';
     exit;
 }
 
@@ -269,4 +280,4 @@ if ($id) {
         <a href="inventario.php?tabla=<?php echo htmlspecialchars($tabla); ?>" class="btn btn-secondary">Cancelar</a>
     </form>
 </main>
-<?php require './../layout/footer.htm'; ?>
+<?php require './../../layout/footer.htm'; ?>

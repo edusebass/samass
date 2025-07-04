@@ -1,9 +1,20 @@
+/**
+ * Perfil de Usuario
+ * 
+ * Página para visualizar y gestionar el perfil del usuario autenticado.
+ * Muestra información personal, rol y configuraciones del usuario.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require './../layout/head.html';
-require './../utils/session_check.php';
+require './../../layout/head.html';
+require './../../utils/session_check.php';
 ?>
 
-<?php require './../layout/header.php'; ?>
+<?php require './../../layout/header.php'; ?>
     <title>SAM Assistant</title>
     </head>
     <body>
@@ -16,7 +27,7 @@ require './../utils/session_check.php';
             <ul>
         
 <?php
-require './../db/dbconn.php';
+require './../../db/dbconn.php';
 unset($_SESSION['qr_content']);
 unset($_SESSION['id_voluntario']);
 unset($_SESSION['codigo_item']);

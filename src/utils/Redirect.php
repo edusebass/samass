@@ -1,3 +1,14 @@
+/**
+ * Redirect - Redirección basada en roles
+ * 
+ * Script para redirigir usuarios a sus páginas correspondientes
+ * según su rol en el sistema.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
 session_start();
 if (!isset($_SESSION['rol'])) {
@@ -10,11 +21,11 @@ echo "Role: $role<br>"; // Debug output
 
 if ($role === 1) {
     //Administracion;
-    header('Location: ./../pages/admin.php');
+    header('Location: ./../pages/dashboard/admin.php');
     exit();
 } elseif ($role === 2) {
     //Bodega;
-    header('Location: ./../pages/bodega.php');
+    header('Location: ./../pages/bodega/bodega.php');
     exit();
 } elseif ($role === 3) {
     //Capitan;
@@ -39,7 +50,7 @@ if ($role === 1) {
 }
  elseif ($role === 8) {
     //Desarollo;
-    header('Location: ./../pages/voluntario.php');
+    header('Location: ./../pages/usuarios/voluntario.php');
     exit();
 } else {
     //Varios;

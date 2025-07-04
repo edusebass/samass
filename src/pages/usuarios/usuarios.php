@@ -34,21 +34,21 @@
  * - Restringe acciones de eliminación a roles específicos (Admin/Super User).
  * - Validación en dos pasos para eliminación de usuarios.
  */
-require './../layout/head.html';
-include('./../utils/verificar_rol.php');
+require './../../layout/head.html';
+include('./../../utils/verificar_rol.php');
 ?>
     <title>SAM assistant</title>
     </head>
 <body>
 <?php
-require './../layout/header.php';
-require './../utils/session_check.php';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
 ?>
 
 <main class="container-fluid mt-3">
-    <?php require_once './../utils/breadcrumbs.php';
+    <?php require_once './../../utils/breadcrumbs.php';
     $breadcrumbs = [
-        ['label' => 'Inicio', 'url' => '/src/pages/admin.php'],
+        ['label' => 'Inicio', 'url' => '/src/pages/dashboard/admin.php'],
         ['label' => 'Usuarios', 'url' => null]
     ];
     render_breadcrumbs($breadcrumbs, '/');
@@ -58,9 +58,17 @@ require './../utils/session_check.php';
         <div class="w-100 mb-2 p-1 bg-plomo h5">
             <div class="d-flex justify-content-between align-items-center">
                 <span>USUARIOS REGISTRADOS</span>
-                <a href="form_usuario.php" class="btn btn-dark text-white">
-                    <i class="bi bi-plus-circle"></i> Agregar Usuario
-                </a>
+                <div class="btn-group">
+                    <a href="form_usuario.php" class="btn btn-dark text-white">
+                        <i class="bi bi-plus-circle"></i> Agregar Usuario
+                    </a>
+                    <a href="carga_masiva_usuarios.php" class="btn btn-success text-white ms-2">
+                        <i class="bi bi-upload"></i> Carga Masiva
+                    </a>
+                    <a href="/public/Formato usuarios SAM ASSISTANT.xlsx" class="btn btn-info text-white ms-2" download title="Descargar plantilla Excel para carga masiva">
+                        <i class="bi bi-download"></i> Plantilla Excel
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -79,8 +87,8 @@ require './../utils/session_check.php';
             </thead>
             <tbody>
 <?php
-require_once './../utils/session_check.php';
-require './../db/dbconn.php';
+require_once './../../utils/session_check.php';
+require './../../db/dbconn.php';
 
 try {
     $conn = new PDO("mysql:host=$servername;port=$port;dbname=$database", $username, $password);
@@ -131,8 +139,12 @@ try {
     </div>
 
     <div class="container-fluid m-3 pl-4">
-        <div class="alert alert-info">
-            Voluntarios Registrados en el Sistema: <strong><?php echo $t; ?></strong>
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <span>Voluntarios Registrados en el Sistema: <strong><?php echo $t; ?></strong></span>
+            <small class="text-muted">
+                <i class="bi bi-info-circle"></i> 
+                Usa "Carga Masiva" para importar múltiples usuarios desde Excel
+            </small>
         </div>
     </div>
 </main>
@@ -201,6 +213,6 @@ $('.btn-eliminar-usuario').click(function(e) {
     });
 </script>
 
-<?php require './../layout/footer.htm'; ?>
+<?php require './../../layout/footer.htm'; ?>
 </body>
 </html>

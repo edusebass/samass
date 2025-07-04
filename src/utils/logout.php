@@ -1,3 +1,14 @@
+/**
+ * Logout - Cierre de sesión seguro
+ * 
+ * Script para cerrar sesión de manera segura,
+ * limpiando cookies y variables de sesión.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
 // Inicia la sesión si no está iniciada
 session_start();
@@ -18,6 +29,6 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // Redirige al usuario a la página de login
-header("Location: ./../pages/login.php");
+header("Location: ./../pages/auth/login.php");
 exit();
 ?>

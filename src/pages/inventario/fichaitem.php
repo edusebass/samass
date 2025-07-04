@@ -1,9 +1,20 @@
+/**
+ * Ficha de Item - Detalle completo de un item de inventario
+ * 
+ * Muestra información detallada de un item específico del inventario,
+ * incluyendo historial, imagen, y funcionalidades de edición.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require './../layout/head.html';
-require './../layout/header.php'; 
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
-require './../utils/ejecutar_query.php';
+require './../../layout/head.html';
+require './../../layout/header.php'; 
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
+require './../../utils/ejecutar_query.php';
 
 $codigo = isset($_GET['codigo']) ? $_GET['codigo'] : null;
 
@@ -401,7 +412,7 @@ $photos = [
     </section>
 </main>
 <?php
-require './../layout/footer.htm';
+require './../../layout/footer.htm';
 ?> 
 
 <script>

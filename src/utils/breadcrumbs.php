@@ -1,4 +1,15 @@
 <?php
+/**
+ * Breadcrumbs - Navegación tipo migas de pan
+ * 
+ * Utilidad para renderizar navegación breadcrumbs
+ * en las páginas del sistema.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 
 function render_breadcrumbs(array $trail = [], string $divider = '>') {
     echo '<nav style="--bs-breadcrumb-divider: \'' . $divider . '\';" aria-label="breadcrumb">';

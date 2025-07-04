@@ -1,5 +1,16 @@
+/**
+ * Eliminar Item - Eliminación de registros de inventario
+ * 
+ * Script para eliminar items del inventario.
+ * Valida la tabla y el ID antes de proceder con la eliminación.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require_once './../db/dbconn.php';
+require_once './../../db/dbconn.php';
 
 $tabla = $_GET['tabla'] ?? '';
 $id = $_GET['id'] ?? null;

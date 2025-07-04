@@ -1,6 +1,17 @@
+/**
+ * Marcar No Devuelto - Control de devoluciones
+ * 
+ * Script para marcar items como no devueltos y gestionar
+ * el control de devoluciones en bodega.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require_once './../db/dbconn.php';
-require './../utils/session_check.php';
+require_once './../../db/dbconn.php';
+require './../../utils/session_check.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('HTTP/1.1 405 Method Not Allowed');

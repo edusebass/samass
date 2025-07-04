@@ -1,6 +1,18 @@
+/**
+ * Actualización de Contraseña
+ * 
+ * Script para actualizar la contraseña de usuario.
+ * Valida la contraseña actual, verifica las nuevas contraseñas
+ * y actualiza la información en la base de datos.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
 session_start();
-require './../db/dbconn.php';
+require './../../db/dbconn.php';
 
 header('Content-Type: application/json');
 

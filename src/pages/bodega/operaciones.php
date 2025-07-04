@@ -1,12 +1,23 @@
+/**
+ * Operaciones de Bodega - Listado de operaciones
+ * 
+ * Muestra el listado de operaciones de bodega con información
+ * sobre préstamos, devoluciones y estado de items.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require './../layout/head.html';
-require './../utils/session_check.php';
+require './../../layout/head.html';
+require './../../utils/session_check.php';
 
 ?>
     <title>SAM Assistant</title>
 </head>
 <body>
-    <?php require 'header.php';?>
+    <?php require './../../layout/header.php';?>
        
 <div class="tx" style="background-color: #e8ecf2;">
             <strong>OPERACIONES</strong>

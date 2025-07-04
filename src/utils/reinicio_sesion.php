@@ -1,3 +1,14 @@
+/**
+ * Reinicio Sesión - Gestión de páginas protegidas
+ * 
+ * Utilidad para proteger páginas y reiniciar sesiones
+ * cuando sea necesario.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
 require_once 'session_check.php';
 

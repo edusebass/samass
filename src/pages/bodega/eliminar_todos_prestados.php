@@ -1,6 +1,17 @@
+/**
+ * Eliminar Todos Prestados - Gestión masiva de préstamos
+ * 
+ * Script para eliminar masivamente todos los items prestados
+ * a un voluntario específico en bodega.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require_once './../db/dbconn.php';
-require './../utils/session_check.php';
+require_once './../../db/dbconn.php';
+require './../../utils/session_check.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['confirmar'])) {
     header('HTTP/1.1 400 Bad Request');

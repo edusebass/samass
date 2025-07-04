@@ -1,6 +1,17 @@
+/**
+ * Marcar Prestado - Gestión de préstamos de items
+ * 
+ * Script para marcar items como prestados y gestionar
+ * las operaciones de préstamo en bodega.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require_once './../db/dbconn.php';
-require './../utils/session_check.php';
+require_once './../../db/dbconn.php';
+require './../../utils/session_check.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die('Método no permitido');

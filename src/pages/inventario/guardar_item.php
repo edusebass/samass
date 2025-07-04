@@ -1,5 +1,16 @@
+/**
+ * Guardar Item - Procesamiento de formularios de inventario
+ * 
+ * Script para procesar y guardar items del inventario.
+ * Maneja la creación y actualización de registros en diferentes tablas.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require_once './../db/dbconn.php';
+require_once './../../db/dbconn.php';
 
 // Definir los campos igual que en form_item.php (asociativo: campo => tipo)
 $tablas_campos = [

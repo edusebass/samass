@@ -1,8 +1,24 @@
 <?php
-require './../layout/head.html';
-include('./../utils/verificar_rol.php');
-require './../layout/header.php';
-require './../utils/session_check.php';
+/**
+ * Panel de Administración Principal
+ * 
+ * Dashboard principal para administradores del sistema SAM Assistant.
+ * Proporciona acceso a todas las funcionalidades del sistema incluyendo:
+ * - Gestión de bodega y operaciones
+ * - Inventario y nuevos items
+ * - Compras y solicitudes
+ * - Administración de usuarios
+ * - Informes y configuración
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
+require './../../layout/head.html';
+include('./../../utils/verificar_rol.php');
+require './../../layout/header.php';
+require './../../utils/session_check.php';
 
 unset($_SESSION['qr_content']);
 unset($_SESSION['id_voluntario']);
@@ -22,25 +38,25 @@ unset($_SESSION['codigo_item']);
                 <div class="card rounded-4 p-2">
                     <div class="row justify-content-around align-items-end text-center">
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3 " href="gestionbodega.php"> 
+                            <a class="w-100 p-3 " href="../bodega/gestionbodega.php"> 
                                 <img class="m-auto d-block" src="/public/ico/bodega.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Operaciones</h5>
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3" href="compras.php">
+                            <a class="w-100 p-3" href="../compras/compras.php">
                                 <img class="m-auto d-block" src="/public/ico/compras.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Compras</h5>
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3 " href="inventario.php">
+                            <a class="w-100 p-3 " href="../inventario/inventario.php">
                                 <img class="m-auto d-block" src="/public/ico/inventario.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Inventario</h5>
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3 " href="./form_item.php" >
+                            <a class="w-100 p-3 " href="../inventario/form_item.php" >
                                 <img class="m-auto d-block" src="/public/ico/nuevo.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
                                 <h5>Nuevo Item</h5>
                             </a>
@@ -103,7 +119,7 @@ unset($_SESSION['codigo_item']);
                 <div class="card rounded-4 p-2">
                     <div class="row mt-3 p-1 justify-content-around align-items-center text-center">
                         <div class="col-sm-6 col-md-3 ">
-                            <a class="w-100 p-3" href="usuarios.php"> 
+                            <a class="w-100 p-3" href="../usuarios/usuarios.php"> 
                                 <img class="m-auto" src="/public/ico/user.svg" style="height:120px; width: auto;">
                                 <h5>Usuarios</h5>
                             </a>
@@ -147,7 +163,7 @@ unset($_SESSION['codigo_item']);
             } 
         ?>
 
-        <?php require './../layout/footer.htm';?>   
+        <?php require './../../layout/footer.htm';?>   
         
       <script src="/src/utils/inactivity_warning.js"></script>
         <script src="js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>

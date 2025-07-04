@@ -1,7 +1,18 @@
+/**
+ * Voluntario - Panel de voluntario con gestión de asignaciones
+ * 
+ * Panel principal para voluntarios donde pueden ver sus asignaciones,
+ * solicitar nuevos items y gestionar sus préstamos.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require './../layout/head.html';
-require './../layout/header.php';
-require './../utils/session_check.php';
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
 
 $voluntario_id = $_SESSION['user_id'] ?? '';
 if (empty($voluntario_id)) {
@@ -10,7 +21,7 @@ if (empty($voluntario_id)) {
 
 // Procesar cambio de estado
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
-    require_once './../db/dbconn.php';
+    require_once './../../db/dbconn.php';
     try {
         $item_id = $_POST['item_id'];
         $nuevo_estado = $_POST['accion'] === 'marcar' ? 'Entregado' : 'Pendiente';
@@ -678,4 +689,4 @@ function cambiarEstado(checkbox, esMarcado) {
 }
 </script>
 
-<?php require './../layout/footer.htm'; ?>
+<?php require './../../layout/footer.htm'; ?>

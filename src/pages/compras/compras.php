@@ -1,9 +1,20 @@
+/**
+ * Compras - Gestión de compras y pedidos
+ * 
+ * Módulo principal para gestionar compras, pedidos y solicitudes.
+ * Permite crear, editar y cancelar solicitudes de compra.
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
 // Incluir archivos necesarios
-require './../layout/head.html';
-include('./../utils/verificar_rol.php');
-require './../layout/header.php';
-require './../utils/session_check.php';
+require './../../layout/head.html';
+include('./../../utils/verificar_rol.php');
+require './../../layout/header.php';
+require './../../utils/session_check.php';
 
 // Limpiar variables de sesión
 unset($_SESSION['qr_content']);
@@ -134,7 +145,7 @@ unset($_SESSION['codigo_item']);
  
     </div>
 <?php
-require './../layout/footer.htm';
+require './../../layout/footer.htm';
     ?>   
         <script src="js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 </body>

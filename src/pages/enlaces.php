@@ -18,13 +18,13 @@ unset($_SESSION['codigo_item']);
                 <div class="card rounded-4 p-2">
                     <div class="row">
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3" href="gestionbodega.php" style="text-align:center;">
+                            <a class="w-100 p-3" href="bodega/gestionbodega.php" style="text-align:center;">
                                 <img class="m-auto d-block" src="/public/ico/operaciones.png" style="height:120px; width: auto;">
                                 <h5 class="d-block" style="color:#5C6872;">Operaciones</h5>
                             </a>
                         </div>
                         <div class="col-sm-6 col-md-3">
-                            <a class="w-100 p-3" href="inventario.php" style="text-align:center;">
+                            <a class="w-100 p-3" href="inventario/inventario.php" style="text-align:center;">
                                 <img class="m-auto d-block" src="/public/ico/inventario.png" style="height:120px; width: auto;">
                                 <h5 class="d-block" style="color:#5C6872;">Inventario</h5>
                             </a>
@@ -76,7 +76,7 @@ unset($_SESSION['codigo_item']);
                 <div class="card rounded-4 p-2" style="border: solid 2px #E4640D;">
                     <div class="row">
                         <div class="col-12 col-sm-6">
-                            <a class="w-100 p-3" href="usuarios.php" style="text-align:center;">
+                            <a class="w-100 p-3" href="usuarios/usuarios.php" style="text-align:center;">
                                 <img class="m-auto d-block" src="/public/ico/user.png" style="height:120px; width: auto;">
                                 <h5 class="d-block" style="color:#5C6872;">Usuarios</h5>
                             </a>

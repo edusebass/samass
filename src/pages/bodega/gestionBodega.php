@@ -1,10 +1,24 @@
+/**
+ * Gestión de Bodega - Operaciones principales de bodega
+ * 
+ * Panel principal para gestionar operaciones de bodega incluyendo:
+ * - Préstamo de herramientas y materiales
+ * - Devolución de items
+ * - Gestión de voluntarios
+ * - Escáner QR y código de barras
+ * 
+ * @package SAM Assistant
+ * @version 1.0
+ * @author Sistema SAM
+ */
+
 <?php
-require './../layout/header.php'; 
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
-require_once './../utils/reinicio_sesion.php';
-require_once './../utils/ejecutar_query.php';
-require './../layout/head.html';
+require './../../layout/header.php'; 
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
+require_once './../../utils/reinicio_sesion.php';
+require_once './../../utils/ejecutar_query.php';
+require './../../layout/head.html';
 
 protegerPagina("gestionBodega.php");
 
@@ -665,7 +679,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
             .then(response => response.text())
             .then(data => {
                 setTimeout(() => {
-                    window.location.href = 'https://192.168.0.135/src/pages/gestionbodega.php';
+                    window.location.href = 'https://192.168.0.135/src/pages/bodega/gestionbodega.php';
                 }, 2000); // Recargar después de 2 segundos (2000 ms)
             })
             .catch(error => console.error('Error:', error));
@@ -675,7 +689,7 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
         // Botón de reinicio SOLO borra datos
         reiniciarTodo.addEventListener('click', function() {
             // Redirigir con parámetro de reset para borrar todo
-            window.location.href = 'https://192.168.0.135/src/pages/gestionbodega.php?reset=true';
+            window.location.href = 'https://192.168.0.135/src/pages/bodega/gestionbodega.php?reset=true';
         });
     </script>
     <script>
@@ -688,6 +702,6 @@ if (isset($_GET['reset']) && $_GET['reset'] == 'true') {
         });
     </script>
     <script src="js/bootstrap.bundle.min.js"></script>
-<?php require './../layout/footer.htm'; ?> 
+<?php require './../../layout/footer.htm'; ?> 
 </body>
 </html>

@@ -30,8 +30,8 @@
  * - Manejo de excepciones para errores de base de datos.
  * - Mensajes de error no revelan información sensible.
  */
-require './../utils/session_check.php';
-require_once './../db/dbconn.php';
+require './../../utils/session_check.php';
+require_once './../../db/dbconn.php';
 
 // Verificar permisos
 if ($_SESSION['rol'] !== '1' && $_SESSION['rol'] !== '6') {
