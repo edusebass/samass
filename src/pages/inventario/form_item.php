@@ -14,6 +14,7 @@ require './../../layout/head.html';
 require './../../layout/header.php';
 require './../../utils/session_check.php';
 require_once './../../db/dbconn.php';
+require_once './../../utils/codigo_generator.php';
 
 // Definición de los campos y tipos por tabla
 $tablas_campos = [
@@ -202,38 +203,6 @@ function renderInput($campo, $tipo, $valor, $tabla = '', $codigo = '') {
                 <input type='text' class='form-control' name='$campo' value='$valor' $required></div>";
     }
 }
-
-// Genera el prefijo según la tabla
-function obtenerPrefijoTabla($tabla) {
-    $prefijos = [
-        'equipo_seguridad' => '001',
-        'habitacion_huesped_betel' => '002',
-        'herramientas_equipo_jardineria' => '003',
-        'herramientas_manuales' => '004',
-        'maquinas' => '005',
-        'items_generales_por_edificio' => '006'
-    ];
-    return $prefijos[$tabla] ?? '999';
-}
-
-// Genera el siguiente código disponible para la tabla (solo para referencia, no se usa aquí)
-function generarCodigo($conn, $tabla) {
-    $prefijo = obtenerPrefijoTabla($tabla);
-    $stmt = $conn->prepare("SELECT codigo FROM $tabla WHERE codigo IS NOT NULL AND codigo != ''");
-    $stmt->execute();
-    $codigos = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    $max = 0;
-    foreach ($codigos as $codigo) {
-        if (preg_match('/^003-' . $prefijo . '-(\d{3})$/', $codigo, $m)) {
-            $num = intval($m[1]);
-            if ($num > $max) $max = $num;
-        }
-    }
-    $nuevo_num = str_pad($max + 1, 3, '0', STR_PAD_LEFT);
-    return "003-$prefijo-$nuevo_num";
-}
-
 
 $campos = $tablas_campos[$tabla];
 $datos = array_fill_keys(array_keys($campos), '');

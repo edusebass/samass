@@ -15,6 +15,7 @@ require './../../layout/header.php';
 require './../../utils/session_check.php';
 require_once './../../db/dbconn.php';
 require_once './../../../vendor/autoload.php'; // Ruta corregida al vendor
+require_once './../../utils/codigo_generator.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -201,38 +202,14 @@ $mapeo_cabeceras = [
     ]
 ];
 
-// Funciones para generar código
-function obtenerPrefijoTabla($tabla) {
-    $prefijos = [
-        'equipo_seguridad' => '001',
-        'habitacion_huesped_betel' => '002',
-        'herramientas_equipo_jardineria' => '003',
-        'herramientas_manuales' => '004',
-        'maquinas' => '005',
-        'items_generales_por_edificio' => '006'
-    ];
-    return $prefijos[$tabla] ?? '999';
-}
-function generarCodigo($conn, $tabla) {
-    $prefijo = obtenerPrefijoTabla($tabla);
-    $stmt = $conn->prepare("SELECT codigo FROM $tabla WHERE codigo IS NOT NULL AND codigo != ''");
-    $stmt->execute();
-    $codigos = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    $max = 0;
-    foreach ($codigos as $codigo) {
-        if (preg_match('/^003-' . $prefijo . '-(\d{3})$/', $codigo, $m)) {
-            $num = intval($m[1]);
-            if ($num > $max) $max = $num;
-        }
-    }
-    $nuevo_num = str_pad($max + 1, 3, '0', STR_PAD_LEFT);
-    return "003-$prefijo-$nuevo_num";
-}
-
 // Procesamiento del archivo Excel
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
     $archivoTmp = $_FILES['archivo_excel']['tmp_name'];
     $spreadsheet = IOFactory::load($archivoTmp);
+    
+    $registros_insertados = 0;
+    $errores = [];
+    $codigos_generados = [];
 
     foreach ($tablas_campos as $tabla => $campos) {
         if (!$spreadsheet->sheetNameExists($tabla)) continue;
@@ -256,57 +233,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
             }
         }
 
+        $tabla_insertados = 0;
         foreach ($rows as $row) {
             // Ignorar filas completamente vacías
             if (count(array_filter($row, fn($v) => trim((string)$v) !== '')) === 0) continue;
 
-            $valores = [];
-            // Llenar los valores según el mapeo columna => campo
-            foreach ($colToCampo as $colKey => $campo) {
-                if ($campo === 'codigo' && $tabla !== 'items_generales_por_edificio') continue;
-                $valores[$campo] = isset($row[$colKey]) ? $row[$colKey] : null;
-            }
-            // Completar los campos que no vinieron en el Excel con null
-            foreach ($campos as $campo => $tipo) {
-                if (!array_key_exists($campo, $valores) && !($campo === 'codigo' && $tabla !== 'items_generales_por_edificio')) {
-                    $valores[$campo] = null;
+            try {
+                $valores = [];
+                // Llenar los valores según el mapeo columna => campo
+                foreach ($colToCampo as $colKey => $campo) {
+                    if ($campo === 'codigo' && $tabla !== 'items_generales_por_edificio') continue;
+                    $valores[$campo] = isset($row[$colKey]) ? $row[$colKey] : null;
                 }
-            }
-            // Limpiar valores decimales
-            foreach ($campos as $campo => $tipo) {
-                if ($tipo === 'decimal' && isset($valores[$campo])) {
-                    $valores[$campo] = str_replace(['$', ','], '', $valores[$campo]);
-                    $valores[$campo] = is_numeric($valores[$campo]) ? $valores[$campo] : null;
-                }
-            }
-            // Limpiar valores decimales
-            foreach ($campos as $campo => $tipo) {
-                if ($tipo === 'decimal' && isset($valores[$campo])) {
-                    $valores[$campo] = str_replace(['$', ','], '', $valores[$campo]);
-                    $valores[$campo] = is_numeric($valores[$campo]) ? $valores[$campo] : null;
-                }
-                // Limpiar valores numéricos y años
-                if (($tipo === 'number' || $tipo === 'year') && isset($valores[$campo])) {
-                    if (trim($valores[$campo]) === '-' || trim($valores[$campo]) === '') {
-                        $valores[$campo] = null;
-                    } elseif (!is_numeric($valores[$campo])) {
+                // Completar los campos que no vinieron en el Excel con null
+                foreach ($campos as $campo => $tipo) {
+                    if (!array_key_exists($campo, $valores) && !($campo === 'codigo' && $tabla !== 'items_generales_por_edificio')) {
                         $valores[$campo] = null;
                     }
                 }
+                // Limpiar valores decimales
+                foreach ($campos as $campo => $tipo) {
+                    if ($tipo === 'decimal' && isset($valores[$campo])) {
+                        $valores[$campo] = str_replace(['$', ','], '', $valores[$campo]);
+                        $valores[$campo] = is_numeric($valores[$campo]) ? $valores[$campo] : null;
+                    }
+                    // Limpiar valores numéricos y años
+                    if (($tipo === 'number' || $tipo === 'year') && isset($valores[$campo])) {
+                        if (trim($valores[$campo]) === '-' || trim($valores[$campo]) === '') {
+                            $valores[$campo] = null;
+                        } elseif (!is_numeric($valores[$campo])) {
+                            $valores[$campo] = null;
+                        }
+                    }
+                }
+                // Generar código si no es items_generales_por_edificio
+                $codigo_generado = null;
+                if ($tabla !== 'items_generales_por_edificio') {
+                    $codigo_generado = generarCodigo($conn, $tabla);
+                    $valores = array_merge(['codigo' => $codigo_generado], $valores);
+                }
+                // Insertar en la base de datos
+                $cols = implode(', ', array_keys($valores));
+                $placeholders = implode(', ', array_fill(0, count($valores), '?'));
+                $sql = "INSERT INTO $tabla ($cols) VALUES ($placeholders)";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(array_values($valores));
+                
+                $registros_insertados++;
+                $tabla_insertados++;
+                
+                // Guardar código generado para el reporte
+                if ($codigo_generado) {
+                    if (!isset($codigos_generados[$tabla])) {
+                        $codigos_generados[$tabla] = [];
+                    }
+                    $codigos_generados[$tabla][] = $codigo_generado;
+                }
+                
+            } catch (Exception $e) {
+                $errores[] = "Error en tabla $tabla: " . $e->getMessage();
             }
-            // Generar código si no es items_generales_por_edificio
-            if ($tabla !== 'items_generales_por_edificio') {
-                $valores = array_merge(['codigo' => generarCodigo($conn, $tabla)], $valores);
-            }
-            // Insertar en la base de datos
-            $cols = implode(', ', array_keys($valores));
-            $placeholders = implode(', ', array_fill(0, count($valores), '?'));
-            $sql = "INSERT INTO $tabla ($cols) VALUES ($placeholders)";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(array_values($valores));
+        }
+        
+        if ($tabla_insertados > 0) {
+            echo "<div class='alert alert-success'>✅ <strong>$tabla:</strong> $tabla_insertados registros insertados correctamente.</div>";
         }
     }
-    echo "<div class='alert alert-success'>Carga masiva completada correctamente.</div>";
+    
+    // Mostrar resumen final
+    echo "<div class='alert alert-info'>";
+    echo "<h6>📊 Resumen de la carga:</h6>";
+    echo "<p><strong>Total de registros insertados:</strong> $registros_insertados</p>";
+    
+    if (!empty($codigos_generados)) {
+        echo "<h6>🏷️ Códigos generados:</h6>";
+        foreach ($codigos_generados as $tabla => $codigos) {
+            echo "<p><strong>" . ucfirst(str_replace('_', ' ', $tabla)) . ":</strong> " . implode(', ', $codigos) . "</p>";
+        }
+    }
+    
+    if (!empty($errores)) {
+        echo "<h6>❌ Errores encontrados:</h6>";
+        foreach ($errores as $error) {
+            echo "<p class='text-danger'>$error</p>";
+        }
+    }
+    echo "</div>";
 }
 ?>
 
@@ -320,9 +332,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
         <button type="submit" class="btn btn-success">Cargar</button>
     </form>
     <div class="alert alert-info mt-3">
-        El archivo debe tener una hoja por cada tabla, con los nombres de las pestañas exactamente igual a:<br>
-    b><?php echo implode(', ', array_keys($mapeo_cabeceras)); ?></b><br>
-        En <b>items_generales_por_edificio</b> el campo <b>codigo</b> debe venir en el Excel, en las demás se generará automáticamente.
+        <h6>📋 Instrucciones:</h6>
+        <p>El archivo debe tener una hoja por cada tabla, con los nombres de las pestañas exactamente igual a:<br>
+        <b><?php echo implode(', ', array_keys($mapeo_cabeceras)); ?></b></p>
+        
+        <h6>🏷️ Generación de códigos automáticos:</h6>
+        <ul>
+            <li><strong>Máquinas:</strong> 003-GS1-001, 003-GS1-002, etc.</li>
+            <li><strong>Herramientas Manuales:</strong> 003-GS2-001, 003-GS2-002, etc.</li>
+            <li><strong>Herramientas y Equipo de Jardinería:</strong> 003-GS3-001, 003-GS3-002, etc.</li>
+            <li><strong>Equipo de Seguridad:</strong> 003-GS4-001, 003-GS4-002, etc.</li>
+            <li><strong>Habitación Huésped Betel:</strong> 003-GS5-001, 003-GS5-002, etc.</li>
+            <li><strong>Items Generales por Edificio:</strong> El código debe venir en el Excel</li>
+        </ul>
+        
+        <p><em>Los códigos se generan automáticamente excepto para "items_generales_por_edificio" donde debe proporcionarse en el Excel.</em></p>
     </div>
 </main>
 <?php require './../../layout/footer.htm'; ?>

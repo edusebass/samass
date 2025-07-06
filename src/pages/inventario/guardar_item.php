@@ -11,6 +11,7 @@
 
 <?php
 require_once './../../db/dbconn.php';
+require_once './../../utils/codigo_generator.php';
 
 // Definir los campos igual que en form_item.php (asociativo: campo => tipo)
 $tablas_campos = [
@@ -122,34 +123,6 @@ foreach ($campos as $campo => $tipo) {
     } else {
         $valores[$campo] = $_POST[$campo] ?? null;
     }
-}
-
-// Funciones para código
-function obtenerPrefijoTabla($tabla) {
-    $prefijos = [
-        'equipo_seguridad' => '001',
-        'habitacion_huesped_betel' => '002',
-        'herramientas_equipo_jardineria' => '003',
-        'herramientas_manuales' => '004',
-        'maquinas' => '005',
-        'items_generales_por_edificio' => '006'
-    ];
-    return $prefijos[$tabla] ?? '999';
-}
-function generarCodigo($conn, $tabla) {
-    $prefijo = obtenerPrefijoTabla($tabla);
-    $stmt = $conn->prepare("SELECT codigo FROM $tabla WHERE codigo IS NOT NULL AND codigo != ''");
-    $stmt->execute();
-    $codigos = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    $max = 0;
-    foreach ($codigos as $codigo) {
-        if (preg_match('/^003-' . $prefijo . '-(\d{3})$/', $codigo, $m)) {
-            $num = intval($m[1]);
-            if ($num > $max) $max = $num;
-        }
-    }
-    $nuevo_num = str_pad($max + 1, 3, '0', STR_PAD_LEFT);
-    return "003-$prefijo-$nuevo_num";
 }
 
 // --- GUARDADO ---
