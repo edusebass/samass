@@ -1,3 +1,4 @@
+<?php
 /**
  * Operaciones de Bodega - Listado de operaciones
  * 
@@ -9,7 +10,6 @@
  * @author Sistema SAM
  */
 
-<?php
 require './../../layout/head.html';
 require './../../utils/session_check.php';
 
@@ -33,9 +33,9 @@ require './../../utils/session_check.php';
             <th>FECHA DEVOLUCCION</th>
         </tr>
 <?php
-require_once './../utils/session_check.php';
+require_once './../../utils/session_check.php';
 
-require './../db/dbconn.php';
+require './../../db/dbconn.php';
 
 try {
     $conn = new PDO("mysql:host=$servername;port=$port;dbname=$database", $username, $password);
@@ -75,6 +75,6 @@ JOIN `user` ON operaciones.voluntarioid = `user`.voluntario;
             <br>
         </div>
     </div>
-    <?php require './../layout/footer.htm'; ?>
+    <?php require './../../layout/footer.htm'; ?>
 </body>
 </html>

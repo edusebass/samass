@@ -1,3 +1,4 @@
+<?php
 /**
  * Reinicio Sesión - Gestión de páginas protegidas
  * 
@@ -9,7 +10,6 @@
  * @author Sistema SAM
  */
 
-<?php
 require_once 'session_check.php';
 
 function protegerPagina($nombre_pagina) {

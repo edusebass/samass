@@ -1,3 +1,4 @@
+<?php
 /**
  * Voluntario - Panel de voluntario con gestión de asignaciones
  * 
@@ -9,7 +10,6 @@
  * @author Sistema SAM
  */
 
-<?php
 require './../../layout/head.html';
 require './../../layout/header.php';
 require './../../utils/session_check.php';
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     }
 }
 
-require_once './../db/dbconn.php';
+require_once './../../db/dbconn.php';
 $todas_solicitudes = [];
 
 try {

@@ -1,3 +1,4 @@
+<?php
 /**
  * Gestión de Bodega - Operaciones principales de bodega
  * 
@@ -12,7 +13,6 @@
  * @author Sistema SAM
  */
 
-<?php
 require './../../layout/header.php'; 
 require './../../utils/session_check.php';
 require_once './../../db/dbconn.php';

@@ -1,3 +1,4 @@
+<?php
 /**
  * Ejecutar Query - Función auxiliar para ejecutar consultas SQL
  * 
@@ -9,8 +10,7 @@
  * @author Sistema SAM
  */
 
-<?php
-require './../db/dbconn.php';
+require './../../db/dbconn.php';
 
 function ejecutar_query($conn, $query, $params = []) {
     $stmt = $conn->prepare($query);
