@@ -61,7 +61,7 @@ function redirectBasedOnSession() {
     if (!isLoggedIn()) {
         // Si no hay sesión activa y no estamos en login.php, redirigir al login
         if ($currentPage !== 'login.php') {
-            header("Location: ./../pages/auth/login.php");
+            header("Location: ./../../auth/login.php");
             exit();
         }
     } else {

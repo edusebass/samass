@@ -1,9 +1,79 @@
 /**
- * Marcar Prestado - Gestión de préstamos de items
- * 
- * Script para marcar items como prestados y gestionar
- * las operaciones de préstamo en bodega.
- * 
+ * Marcar Prestado - Endpoint para gestión de estados de préstamos
+ *
+ * Descripción:
+ * Controlador dual para actualización de estados de préstamos, tanto individuales como masivos.
+ * Maneja transiciones entre estados 'Entregado' y 'Pendiente' con registro automático de fechas.
+ *
+ * Funcionalidades principales:
+ * - Actualización individual de estado (Entregado/Pendiente)
+ * - Procesamiento masivo de devoluciones (entrega total)
+ * - Registro automático de timestamps:
+ *   * fecha_entregado al marcar como Entregado
+ *   * fecha_recibido en devoluciones masivas
+ *   * Limpieza de fechas al revertir a Pendiente
+ *
+ * Modos de operación:
+ * 1. Individual (POST id + estado_entrega):
+ *   - Transiciones estado_entrega
+ *   - Gestión de fecha_entregado
+ *
+ * 2. Masivo (POST accion=entrega_total + ids[]):
+ *   - Marca múltiples items como Devueltos
+ *   - Registra fecha_recibido
+ *   - No modifica estado_entrega
+ *
+ * Validaciones:
+ * - Autenticación obligatoria
+ * - Método POST exclusivo
+ * - Propiedad de los items (voluntarioid)
+ * - Existencia de IDs en solicitudes
+ *
+ * Respuestas:
+ * - Individual:
+ *   * 'OK' (éxito)
+ *   * 'No se actualizó...' (sin cambios)
+ *   * Mensaje de error (fallo)
+ *
+ * - Masivo:
+ *   * JSON {success, count}
+ *   * JSON {success, error} (fallo)
+ *
+ * Seguridad:
+ * - Consultas preparadas con parámetros
+ * - Filtrado de IDs en operación masiva
+ * - Restricción por voluntario_id
+ * - Loggeo de errores
+ *
+ * Flujo de datos:
+ * - Individual:
+ *   estado_entrega → define if(fecha_entregado)
+ *
+ * - Masivo:
+ *   estado_devolucion = 'Devuelto' + fecha_recibido
+ *
+ * Campos afectados:
+ * - estado_entrega (individual)
+ * - estado_devolucion (masivo)
+ * - fecha_entregado (individual)
+ * - fecha_recibido (masivo)
+ *
+ * Integración:
+ * - Llamado desde:
+ *   * Checkboxes individuales
+ *   * Botón "Entrega Total"
+ * - Coordina con:
+ *   * Tabla de préstamos activos
+ *   * Listado histórico
+ *
+ * Auditoría:
+ * - error_log para excepciones
+ * - Conteo preciso de registros afectados
+ *
+ * Notas técnicas:
+ * - Operación masiva no es transaccional
+ * - NOW() para timestamps consistentes
+ * - Placeholders dinámicos para arrays de IDs
  * @package SAM Assistant
  * @version 1.0
  * @author Sistema SAM

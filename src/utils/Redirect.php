@@ -50,7 +50,7 @@ if ($role === 1) {
 }
  elseif ($role === 8) {
     //Desarollo;
-    header('Location: ./../pages/usuarios/voluntario.php');
+    header('Location: ./../pages/voluntario/voluntario.php');
     exit();
 } else {
     //Varios;

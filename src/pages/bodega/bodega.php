@@ -29,7 +29,6 @@ try {
     echo "Error: " . $e->getMessage();
     exit();
 }
-includeTimeoutScript(); 
 
 // Limpiar variables de sesión
 unset($_SESSION['qr_content']);
@@ -83,12 +82,6 @@ unset($_SESSION['codigo_item']);
                             <a class="w-100 p-3" href="../compras/compras.php"> 
                                 <img class="m-auto" src="/public/ico/compras.svg" style="height:auto; max-height: 100px; width: 100%; max-width: 100px; min-width:60px;">
                                 <h5>Pedido</h5>
-                            </a>
-                        </div>
-                        <div class="col-sm-6 col-md-3 ">
-                            <a class="w-100 p-3" href="../compras/"> 
-                                <img class="m-auto" src="/public/ico/recepcion.svg" style="height:auto; max-height:120px; width: 100%; max-width:120px; min-width:60px;">
-                                <h5>Recepción</h5>
                             </a>
                         </div>
                     </div> 
