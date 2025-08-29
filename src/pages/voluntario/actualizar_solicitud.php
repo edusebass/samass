@@ -2,59 +2,11 @@
 /**
  * Actualizar Solicitud - Endpoint para modificación de solicitudes existentes
  *
- * Descripción:
- * Script API que permite a los voluntarios editar los detalles de sus solicitudes de herramientas.
- * Procesa actualizaciones de nombre, cantidad y observaciones de items previamente solicitados.
- *
- * Funcionalidades:
- * - Actualiza campos básicos de solicitudes (nombre, cantidad, observaciones).
- * - Restringe modificaciones solo a solicitudes propias del voluntario.
- * - Valida integridad de datos mediante consultas preparadas.
- * - Retorna respuestas estructuradas en formato JSON.
- *
- * Campos actualizables:
- * - nombreitem: Nombre/descripción de la herramienta solicitada.
- * - cantidad: Cantidad requerida (entero positivo).
- * - observaciones: Notas adicionales sobre la solicitud.
- *
- * Variables principales:
- * - $_POST['idsolicitud']: ID de la solicitud a modificar (requerido).
- * - $_POST['nombreitem']: Nuevo nombre para el item.
- * - $_POST['cantidad']: Nueva cantidad solicitada.
- * - $_POST['observaciones']: Nuevas observaciones.
- * - $response: Array con resultado de la operación.
- *
- * Dependencias:
- * - dbconn.php: Conexión a la base de datos.
- * - session_check.php: Verificación de sesión activa.
- *
- * Seguridad:
- * - Requiere autenticación mediante sesión.
- * - Solo permite modificar solicitudes del usuario logueado.
- * - Valida método POST y parámetros obligatorios.
- * - Usa consultas preparadas para prevenir inyección SQL.
- * - Cabecera Content-Type definida como JSON.
- *
- * Respuestas JSON:
- * - success: boolean indica si la actualización fue exitosa.
- * - error: string con mensaje descriptivo en caso de fallo.
- *
- * Flujo típico:
- * 1. Validar método POST y presencia de ID de solicitud.
- * 2. Verificar sesión activa del voluntario.
- * 3. Construir y ejecutar consulta UPDATE con restricción de voluntario.
- * 4. Retornar éxito o error en formato JSON.
- *
- * Casos de error:
- * - Solicitud no POST o falta de ID de solicitud.
- * - Error de conexión con base de datos.
- * - Intento de modificar solicitud de otro voluntario.
- * - Campos requeridos vacíos (manejado por frontend).
- *
- * Notas:
- * - No permite modificar estados de entrega/devolución (usar actualizar_estados.php).
- * - No actualiza fechas automáticamente (conserva fecha original de solicitud).
+ * Modificado para funcionar con bodega.php:
+ * - Ahora recibe voluntario_id desde POST en lugar de usar el de sesión
+ * - Compatible con el sistema de búsqueda de voluntarios
  */
+
 require_once './../../db/dbconn.php';
 require_once './../../utils/session_check.php';
 
@@ -62,9 +14,18 @@ header('Content-Type: application/json');
 
 $response = ['success' => false];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idsolicitud'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idsolicitud'], $_POST['voluntario_id'])) {
     try {
-        $stmt = $conn->prepare("UPDATE solicitudes_herramientas 
+        // Validar campos obligatorios
+        if (empty($_POST['nombreitem'])) {
+            throw new Exception('El nombre del item es requerido');
+        }
+        
+        if (!isset($_POST['cantidad']) || $_POST['cantidad'] <= 0) {
+            throw new Exception('La cantidad debe ser un número positivo');
+        }
+
+        $stmt = $conn->prepare("UPDATE bodega_herramientas 
                                SET nombreitem = ?, 
                                    cantidad = ?, 
                                    observaciones = ?
@@ -72,18 +33,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idsolicitud'])) {
                                AND voluntarioid = ?");
         $stmt->execute([
             $_POST['nombreitem'],
-            $_POST['cantidad'],
-            $_POST['observaciones'],
+            (int)$_POST['cantidad'], // Aseguramos que sea entero
+            $_POST['observaciones'] ?? null, // Usamos null si no hay observaciones
             $_POST['idsolicitud'],
-            $_SESSION['user_id']
+            $_POST['voluntario_id'] // Usamos el ID del voluntario del formulario
         ]);
         
-        $response['success'] = true;
+        // Verificar si se actualizó algún registro
+        if ($stmt->rowCount() > 0) {
+            $response['success'] = true;
+        } else {
+            $response['error'] = 'No se encontró la solicitud o no tienes permisos';
+        }
     } catch(PDOException $e) {
         $response['error'] = 'Error al actualizar: ' . $e->getMessage();
+    } catch(Exception $e) {
+        $response['error'] = $e->getMessage();
     }
 } else {
-    $response['error'] = 'Solicitud inválida';
+    $response['error'] = 'Solicitud inválida - parámetros faltantes';
 }
 
 echo json_encode($response);

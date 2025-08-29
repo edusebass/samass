@@ -1,3 +1,4 @@
+<?php
 /**
  * Cancelar Solicitud - Script para eliminación de solicitudes de herramientas
  *
@@ -5,90 +6,70 @@
  * Procesa la eliminación segura de solicitudes de herramientas, verificando previamente
  * que pertenezcan al voluntario que realiza la acción.
  *
- * Funcionalidades clave:
- * - Elimina permanentemente solicitudes de la base de datos.
- * - Verifica propiedad de la solicitud antes de eliminarla.
- * - Manejo de mensajes de éxito/error en sesión.
- * - Redirección segura tras la operación.
- *
- * Flujo de operación:
- * 1. Verifica parámetro ID en GET y sesión activa.
- * 2. Confirma que la solicitud pertenece al voluntario.
- * 3. Ejecuta eliminación si pasa validaciones.
- * 4. Redirige con feedback de operación.
- *
- * Variables importantes:
- * - $_GET['id']: ID de la solicitud a cancelar.
- * - $_SESSION['user_id']: ID del voluntario autenticado.
- * - $_SESSION['error']: Mensaje de error (si aplica).
- * - $_SESSION['success']: Mensaje de confirmación.
- *
- * Seguridad:
- * - Verificación de sesión obligatoria.
- * - Confirmación de propiedad antes de eliminar.
- * - Manejo de errores con try-catch.
- * - Redirecciones seguras tras cada operación.
- * - Consultas preparadas para evitar inyección SQL.
- *
- * Mensajes de sesión:
- * - Éxito: "Solicitud eliminada correctamente"
- * - Error: Variantes según fallo (permisos, BD, etc.)
- *
- * Dependencias:
- * - session_check.php: Validación de sesión.
- * - dbconn.php: Conexión a base de datos.
- *
- * Redirecciones:
- * - Siempre redirige a voluntario.php tras operación.
- * - Conserva mensajes en sesión para feedback.
- *
- * Casos de error manejados:
- * - Falta de ID en parámetro GET.
- * - Solicitud no pertenece al usuario.
- * - Errores de base de datos.
- * - Intento de eliminar solicitud inexistente.
- *
- * Notas:
- * - Eliminación permanente (no es borrado lógico).
- * - No requiere interfaz propia (se invoca desde voluntario.php).
- * - El feedback se muestra en la interfaz principal.
- * @package SAM Assistant
- * @version 1.0
- * @author Sistema SAM
+ * Modificaciones:
+ * - Ahora soporta redirección tanto para voluntario.php como bodega.php
+ * - Conserva el parámetro de búsqueda cuando viene de bodega.php
+ * - Verifica permisos adicionales para usuarios de bodega
  */
 
-<?php
 require './../../utils/session_check.php';
 require_once './../../db/dbconn.php';
 
 if (!isset($_GET['id'])) {
-    header('Location: ../voluntario/voluntario.php');
+    $_SESSION['error'] = "ID de solicitud no proporcionado";
+    header('Location: ' . determinarRedireccion());
     exit;
 }
 
 $id_solicitud = $_GET['id'];
 $voluntario_id = $_SESSION["user_id"];
+$es_bodega = ($_SESSION['rol'] == 2); // Rol 2 = Bodega
 
 try {
-    // Verificar que la solicitud pertenece al voluntario actual
-    $stmt = $conn->prepare("SELECT idsolicitud FROM solicitudes_herramientas WHERE idsolicitud = ? AND voluntarioid = ?");
-    $stmt->execute([$id_solicitud, $voluntario_id]);
+    // Verificar que la solicitud pertenece al voluntario actual o el usuario es de bodega
+    $sql = "SELECT idsolicitud FROM bodega_herramientas WHERE idsolicitud = ?";
+    $params = [$id_solicitud];
+    
+    if (!$es_bodega) {
+        $sql .= " AND voluntarioid = ?";
+        $params[] = $voluntario_id;
+    }
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
     
     if ($stmt->rowCount() === 0) {
         $_SESSION['error'] = "No tienes permiso para eliminar esta solicitud o no existe";
-        header('Location: ../voluntario/voluntario.php');
+        header('Location: ' . determinarRedireccion());
         exit;
     }
     
     // Eliminar la solicitud
-    $stmt = $conn->prepare("DELETE FROM solicitudes_herramientas WHERE idsolicitud = ?");
+    $stmt = $conn->prepare("DELETE FROM bodega_herramientas WHERE idsolicitud = ?");
     $stmt->execute([$id_solicitud]);
     
     $_SESSION['success'] = "Solicitud eliminada correctamente";
-    header('Location: ../voluntario/voluntario.php');
+    header('Location: ' . determinarRedireccion());
     exit;
 } catch(PDOException $e) {
     $_SESSION['error'] = "Error al eliminar la solicitud: " . $e->getMessage();
-    header('Location: ../voluntario/voluntario.php');
+    header('Location: ' . determinarRedireccion());
     exit;
 }
+
+/**
+ * Determina la URL de redirección basada en el origen
+ */
+function determinarRedireccion() {
+    $search = isset($_GET['search']) ? '?search=' . urlencode($_GET['search']) : '';
+    
+    // Verificar si viene de bodega.php
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    if (strpos($referer, 'bodega.php') !== false) {
+        return '../voluntario/bodega.php' . $search;
+    }
+    
+    // Por defecto redirigir a voluntario
+    return '../voluntario/voluntario.php';
+}
+?>

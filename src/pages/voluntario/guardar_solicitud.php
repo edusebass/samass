@@ -1,116 +1,86 @@
+<?php
 /**
  * Guardar Solicitud - Endpoint para creación de nuevas solicitudes de herramientas
  *
  * Descripción:
  * Procesa el registro de nuevas solicitudes de herramientas por parte de voluntarios,
- * validando y almacenando la información en la base de datos. Diseñado para integración
- * con llamadas AJAX desde el panel del voluntario.
- *
- * Funcionalidades:
- * - Registro de nuevas solicitudes con estado inicial 'Pendiente'
- * - Validación de campos obligatorios y formatos
- * - Asignación automática de fecha/hora de solicitud (vía BD)
- * - Retorno del ID generado para referencia inmediata
- * - Protección contra inyección SQL mediante consultas preparadas
- *
- * Campos requeridos:
- * - nombreitem: Nombre/descripción de la herramienta (texto)
- * - cantidad: Número entero positivo (default: 1)
- * - voluntarioid: ID del voluntario (de sesión)
- * - observaciones: Opcional, texto adicional
- *
- * Validaciones:
- * - Método HTTP POST obligatorio
- * - Campos nombreitem y voluntarioid no vacíos
- * - Cantidad numérica y mayor a 0
- * - Sesión activa requerida
- *
- * Estructura de respuesta:
- * - Éxito: JSON {success: true, id: [nuevo_id]}
- * - Error: HTTP 500 con mensaje descriptivo
- *
- * Flujo de operación:
- * 1. Verificar método POST y sesión activa
- * 2. Validar estructura y contenido de datos
- * 3. Insertar registro con estado 'Pendiente'
- * 4. Retornar ID generado
- * 5. Manejar errores con códigos HTTP apropiados
- *
- * Seguridad:
- * - Validación de sesión obligatoria
- * - Filtrado de entradas
- * - Consultas preparadas
- * - No exposición de detalles internos en errores
- *
- * Integración:
- * - Diseñado para consumo desde formulario AJAX
- * - Coordina con voluntario.php para actualización de UI
- *
- * Base de datos:
- * - Campos insertados:
- *   * nombreitem
- *   * cantidad
- *   * voluntarioid
- *   * observaciones
- *   * estado_entrega (fijado como 'Pendiente')
- * - Campos automáticos:
- *   * idsolicitud (autoincremental)
- *   * fecha_solicitud (timestamp)
- *
- * Consideraciones:
- * - No edita solicitudes existentes (usar actualizar_solicitud.php)
- * - Estado inicial siempre es 'Pendiente'
- * - La cantidad se normaliza a mínimo 1
- */
+ * validando y almacenando la información en ambas tablas (solicitudes_herramientas y bodega_herramientas).
+ * 
  * @package SAM Assistant
- * @version 1.0
+ * @version 1.1
  * @author Sistema SAM
  */
 
-<?php
 require './../../utils/session_check.php';
 require_once './../../db/dbconn.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../usuarios/voluntario.php');
-    exit;
+    header('HTTP/1.1 405 Method Not Allowed');
+    die(json_encode(['success' => false, 'error' => 'Método no permitido']));
 }
 
-// Obtener datos del formulario
+// Obtener y sanitizar datos del formulario
 $voluntario_id = $_POST['voluntarioid'] ?? '';
-$nombre_item = $_POST['nombreitem'] ?? '';
-$cantidad = $_POST['cantidad'] ?? 1;
-$observaciones = $_POST['observaciones'] ?? '';
+$nombre_item = trim($_POST['nombreitem'] ?? '');
+$cantidad = isset($_POST['cantidad']) ? intval($_POST['cantidad']) : 1;
+$observaciones = trim($_POST['observaciones'] ?? '');
 
-// Validaciones básicas
-if (empty($voluntario_id) || empty($nombre_item)) {
-    die('Faltan campos obligatorios');
+// Validaciones
+if (empty($voluntario_id)) {
+    header('HTTP/1.1 400 Bad Request');
+    die(json_encode(['success' => false, 'error' => 'ID de voluntario requerido']));
 }
 
-if (!is_numeric($cantidad) || $cantidad < 1) {
-    die('La cantidad debe ser un número positivo');
+if (empty($nombre_item)) {
+    header('HTTP/1.1 400 Bad Request');
+    die(json_encode(['success' => false, 'error' => 'Nombre del item requerido']));
+}
+
+if ($cantidad < 1) {
+    header('HTTP/1.1 400 Bad Request');
+    die(json_encode(['success' => false, 'error' => 'La cantidad debe ser un número positivo mayor a 0']));
 }
 
 try {
-    // Insertar la nueva solicitud (el ID será autoincremental)
-    $stmt = $conn->prepare("INSERT INTO solicitudes_herramientas 
-                          (nombreitem, cantidad, voluntarioid, observaciones, estado_entrega) 
-                          VALUES (?, ?, ?, ?, 'Pendiente')");
-    $stmt->execute([
-        $nombre_item,
-        $cantidad,
-        $voluntario_id,
-        $observaciones
+    // Iniciar transacción
+    $conn->beginTransaction();
+
+    // Insertar en tabla de voluntarios
+    $stmt1 = $conn->prepare("INSERT INTO solicitudes_herramientas 
+                           (nombreitem, cantidad, voluntarioid, observaciones, estado_entrega) 
+                           VALUES (?, ?, ?, ?, 'Pendiente')");
+    $stmt1->execute([$nombre_item, $cantidad, $voluntario_id, $observaciones]);
+    $id_voluntario = $conn->lastInsertId();
+
+    // Insertar en tabla de bodega
+    $stmt2 = $conn->prepare("INSERT INTO bodega_herramientas 
+                           (nombreitem, cantidad, voluntarioid, observaciones, estado_entrega) 
+                           VALUES (?, ?, ?, ?, 'Pendiente')");
+    $stmt2->execute([$nombre_item, $cantidad, $voluntario_id, $observaciones]);
+    $id_bodega = $conn->lastInsertId();
+
+    // Confirmar transacción
+    $conn->commit();
+
+    // Preparar respuesta
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'id' => $id_voluntario,
+        'id_bodega' => $id_bodega
     ]);
-    
-    // Obtener el ID generado automáticamente
-    $solicitud_id = $conn->lastInsertId();
-    
-    // Respuesta para AJAX
-    echo json_encode(['success' => true, 'id' => $solicitud_id]);
     exit;
-    
+
 } catch(PDOException $e) {
-    http_response_code(500);
-    die('Error al guardar la solicitud: ' . $e->getMessage());
+    // Revertir transacción si está activa
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
+
+    header('HTTP/1.1 500 Internal Server Error');
+    die(json_encode([
+        'success' => false,
+        'error' => 'Error en el servidor',
+        'message' => 'No se pudo completar la solicitud'
+    ]));
 }

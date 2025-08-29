@@ -58,20 +58,27 @@
  * - Intento de modificar item de otro voluntario.
  */
 require_once './../../db/dbconn.php';
-require_once './../../utils/session_check.php';
 
 header('Content-Type: application/json');
 
 $response = ['success' => false];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'], $_POST['accion'])) {
+// Verificar método POST y parámetros requeridos
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'], $_POST['accion'], $_POST['voluntario_id'])) {
     try {
-        $item_id = $_POST['item_id'];
-        $voluntario_id = $_SESSION['user_id'];
-        
-        if ($_POST['accion'] === 'marcar') {
+        // Validar que los IDs sean numéricos
+        if (!is_numeric($_POST['item_id']) || !is_numeric($_POST['voluntario_id'])) {
+            throw new Exception('ID inválido');
+        }
+
+        $item_id = (int)$_POST['item_id'];
+        $voluntario_id = (int)$_POST['voluntario_id'];
+        $accion = $_POST['accion'];
+
+        // Determinar la acción a realizar
+        if ($accion === 'marcar') {
             // Marcar como entregado (actualizar ambos estados)
-            $stmt = $conn->prepare("UPDATE solicitudes_herramientas 
+            $stmt = $conn->prepare("UPDATE bodega_herramientas 
                                   SET estado_entrega = 'Entregado', 
                                       estado_devolucion = 'Entregado',
                                       fecha_entregado = NOW()
@@ -79,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'], $_POST['ac
                                   AND voluntarioid = ?");
         } else {
             // Desmarcar (volver a pendiente)
-            $stmt = $conn->prepare("UPDATE solicitudes_herramientas 
+            $stmt = $conn->prepare("UPDATE bodega_herramientas 
                                   SET estado_entrega = 'Pendiente', 
                                       estado_devolucion = NULL,
                                       fecha_entregado = NULL
@@ -89,12 +96,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'], $_POST['ac
         
         $stmt->execute([$item_id, $voluntario_id]);
         
+        // Verificar si se actualizó algún registro
+        if ($stmt->rowCount() === 0) {
+            throw new Exception('No se encontró la solicitud o no tienes permiso para modificarla');
+        }
+        
         $response['success'] = true;
+        $response['new_state'] = ($accion === 'marcar') ? 'Entregado' : 'Pendiente';
     } catch(PDOException $e) {
         $response['error'] = 'Error al actualizar: ' . $e->getMessage();
+    } catch(Exception $e) {
+        $response['error'] = $e->getMessage();
     }
 } else {
-    $response['error'] = 'Solicitud inválida';
+    // Identificar qué parámetros faltan
+    $missing = [];
+    if (!isset($_POST['item_id'])) $missing[] = 'item_id';
+    if (!isset($_POST['accion'])) $missing[] = 'accion';
+    if (!isset($_POST['voluntario_id'])) $missing[] = 'voluntario_id';
+    
+    $response['error'] = 'Solicitud inválida. Faltan parámetros: ' . implode(', ', $missing);
 }
 
 echo json_encode($response);

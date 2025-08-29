@@ -120,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <label for="password" class="form-label">Contraseña</label>
     <div class="input-group" style="align-items: center;">
         <input type="password" id="password" name="password" class="form-control" required 
-               style="height: 50px; border-right: none; font-size: 1rem;">
+            style="height: 50px; border-right: none; font-size: 1rem;">
         <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
                 id="togglePassword" 
                 style="height: 50px; width: 46px; border-left: none; border-radius: 0 0.375rem 0.375rem 0; padding: 0;">

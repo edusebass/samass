@@ -61,13 +61,13 @@ function redirectBasedOnSession() {
     if (!isLoggedIn()) {
         // Si no hay sesión activa y no estamos en login.php, redirigir al login
         if ($currentPage !== 'login.php') {
-            header("Location: ./../../auth/login.php");
+            header("Location: /src/pages/auth/login.php");
             exit();
         }
     } else {
         // Si hay sesión activa y estamos en login.php, redirigir a la página principal (enlaces.php)
         if ($currentPage === 'login.php') {
-            header("Location: ./../pages/enlaces.php");
+            header("Location: /src/pages/enlaces.php");
             exit();
         }
     }

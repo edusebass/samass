@@ -2,90 +2,71 @@
 /**
  * Marcar Todos Devueltos - Endpoint para actualización masiva de devoluciones
  *
- * Descripción:
- * Servicio especializado para marcar todas las herramientas prestadas de un voluntario
- * como devueltas en una sola operación, con registro automático de fecha de recepción.
- *
- * Funcionalidades clave:
- * - Actualización masiva de estado a 'Devuelto'
- * - Registro automático de timestamp en fecha_recibido
- * - Filtrado inteligente de items elegibles:
- *   * Pertenecientes al voluntario
- *   * Con estado_entrega = 'Entregado'
- *   * Sin marca previa de devolución (NULL o ≠ 'Devuelto')
- * - Retorno de conteo preciso de registros afectados
- *
- * Seguridad:
- * - Autenticación obligatoria via sesión
- * - Restricción por voluntario_id
- * - Consultas preparadas
- * - Manejo estructurado de errores
- *
- * Respuestas JSON:
- * - Éxito: {'success': true, 'updated': X}
- * - Error: {'success': false, 'error': '...'}
- *
- * Criterios de selección:
- * 1. voluntarioid = ID de sesión
- * 2. estado_entrega = 'Entregado'
- * 3. estado_devolucion IS NULL OR != 'Devuelto'
- *
- * Campos actualizados:
- * - estado_devolucion → 'Devuelto'
- * - fecha_recibido → NOW()
- *
- * Flujo de operación:
- * 1. Validar sesión activa
- * 2. Ejecutar UPDATE con criterios combinados
- * 3. Contar registros afectados
- * 4. Retornar resultado
- *
- * Casos de uso:
- * - Regularización masiva al finalizar jornada
- * - Sincronización de estado global
- * - Corrección de inconsistencias
- *
- * Integración:
- * - Invocado desde botón "Marcar Todos Devueltos"
- * - Coordina con listados de préstamos activos
- *
- * Auditoría:
- * - Registra cantidad exacta de actualizaciones
- * - Loggeo de excepciones en servidor
- *
- * Notas técnicas:
- * - No es transaccional (commit automático)
- * - NOW() usa zona horaria del servidor
- * - No afecta items ya marcados como devueltos
- * - Optimizado para conjuntos medianos/grandes
- *
- * Precondiciones:
- * - Sesión válida
- * - Items en estado Entregado
- * - Permisos de voluntario
+ * Modificado para funcionar con bodega.php:
+ * - Ahora recibe voluntario_id desde POST en lugar de usar el de sesión
+ * - Compatible con el sistema de búsqueda de voluntarios
+ * - Mantiene el término de búsqueda para redirección
+ * - Excluye items con estado "No devuelto" o "Perdido"
  */
 
 require_once './../../db/dbconn.php';
 require './../../utils/session_check.php';
 
-if (!isset($_SESSION['user_id'])) {
-    die(json_encode(['success' => false, 'error' => 'No autorizado']));
+header('Content-Type: application/json');
+
+// Validar parámetros requeridos
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['voluntario_id'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Parámetros inválidos']);
+    exit;
 }
 
-$voluntario_id = $_SESSION['user_id'];
+$voluntario_id = $_POST['voluntario_id'];
+$search_term = $_POST['search_term'] ?? '';
 
 try {
-    $stmt = $conn->prepare("UPDATE solicitudes_herramientas 
+    // Primero contar cuántos registros cumplen los criterios
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM bodega_herramientas 
+                           WHERE voluntarioid = ? 
+                           AND estado_entrega = 'Entregado'
+                           AND (estado_devolucion IS NULL 
+                               OR (estado_devolucion != 'Devuelto' 
+                                   AND estado_devolucion != 'No devuelto' 
+                                   AND estado_devolucion != 'Perdido'))");
+    $stmt->execute([$voluntario_id]);
+    $count = $stmt->fetchColumn();
+
+    if ($count == 0) {
+        echo json_encode([
+            'success' => true, 
+            'updated' => 0,
+            'message' => 'No hay items pendientes de marcar como devueltos',
+            'search_term' => $search_term
+        ]);
+        exit;
+    }
+
+    // Actualizar todos los items elegibles (excluyendo "No devuelto" y "Perdido")
+    $stmt = $conn->prepare("UPDATE bodega_herramientas 
                            SET estado_devolucion = 'Devuelto', 
                                fecha_recibido = NOW() 
                            WHERE voluntarioid = ? 
                            AND estado_entrega = 'Entregado'
-                           AND estado_devolucion = 'Devuelto'"); // Solo actualiza si YA está como 'Devuelto'
+                           AND (estado_devolucion IS NULL 
+                               OR (estado_devolucion != 'No devuelto' 
+                                   AND estado_devolucion != 'Perdido'))");
     
     $stmt->execute([$voluntario_id]);
-    $rows = $stmt->rowCount();
+    $rowsAffected = $stmt->rowCount();
     
-    echo json_encode(['success' => true, 'updated' => $rows]);
+    echo json_encode([
+        'success' => true, 
+        'updated' => $rowsAffected,
+        'search_term' => $search_term
+    ]);
+    
 } catch(PDOException $e) {
-    die(json_encode(['success' => false, 'error' => $e->getMessage()]));
+    error_log("Error en marcar_todos_devueltos: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Error al actualizar los registros']);
 }

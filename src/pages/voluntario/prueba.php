@@ -1,99 +1,4 @@
 <?php
-/**
-* Voluntario - Panel de gestión para voluntarios
- *
- * Descripción:
- * Panel principal donde los voluntarios pueden gestionar sus solicitudes de herramientas,
- * realizar seguimiento de entregas y devoluciones, y registrar nuevas solicitudes.
- *
- * Funcionalidades:
- * - Visualización de solicitudes pendientes y entregadas en dos columnas separadas.
- * - Cambio de estado de solicitudes (Pendiente/Entregado) mediante checkboxes.
- * - Sistema de tachado visual para seguimiento de entregas.
- * - Gestión de devoluciones (Devuelto/No devuelto/Perdido).
- * - Formulario para nuevas solicitudes de herramientas.
- * - Sección especial para herramientas no devueltas.
- * - Confirmación en dos pasos para acciones críticas.
- * - Visualización de observaciones por solicitud.
- * - Opciones de entrega total y aprobación masiva.
- *
- * Variables principales:
- * - $voluntario_id: ID del voluntario obtenido de la sesión.
- * - $todas_solicitudes: Array con todas las solicitudes del voluntario.
- * - $solicitud/item: Elementos individuales del listado de solicitudes.
- *
- * Dependencias:
- * - jQuery para interacciones AJAX y manipulaciones DOM.
- * - SweetAlert2 para diálogos de confirmación y notificaciones.
- * - Bootstrap para estilos y componentes UI.
- * - session_check.php para verificación de sesión.
- * - dbconn.php para conexión a base de datos.
- * - head.html, header.php y footer.htm para estructura de layout.
- *
- *  * Core:
- * - ./../../layout/head.html - Encabezado HTML
- * - ./../../layout/header.php - Barra de navegación 
- * - ./../../layout/footer.htm - Pie de página
- * - ./../../utils/session_check.php - Autenticación
- * - ./../../db/dbconn.php - Conexión a base de datos
- *
- * Gestión de Estados:
- * - actualizar_estados.php - Cambio Pendiente/Entregado
- * - actualizar_devolucion.php - Estados de devolución
- * - marcar_prestado.php - Gestión de préstamos
- * - marcar_todos_devueltos.php - Devolución masiva
- * - marcar_no_devuelto.php - Reporte de no devolución
- *
- * Operaciones CRUD:
- * - guardar_solicitud.php - Crear nuevas solicitudes
- * - actualizar_solicitud.php - Editar existentes
- * - cancelar_solicitud.php - Eliminar solicitudes
- * - eliminar_todos_prestados.php - Limpieza masiva
- * - obtener_datos_solicitud.php - Consulta para edición
- *
- * Dependencias Frontend:
- * - jQuery 3.6.0+ - Manipulación DOM/AJAX
- * - SweetAlert2 - Notificaciones
- * - Bootstrap 5 - Estructura UI
- * - Bootstrap Icons - Iconografía
- *
- * Estructura:
- * 1. Sección de solicitudes activas
- * 2. Panel de herramientas prestadas
- * 3. Formulario de nuevas solicitudes
- * 4. Listado de no devueltos
- * Flujos principales:
- * 1. Procesamiento de cambio de estado (POST).
- * 2. Carga inicial de todas las solicitudes del voluntario.
- * 3. Renderizado de tres secciones principales:
- *    - Solicitudes pendientes/entregadas
- *    - Herramientas prestadas
- *    - Herramientas no devueltas
- *
- * Seguridad:
- * - Requiere sesión activa (session_check.php).
- * - Escapa todos los valores mostrados con htmlspecialchars.
- * - Restringe acciones a solicitudes pertenecientes al voluntario logueado.
- * - Validación en servidor para todas las operaciones críticas.
- * - Protección contra CSRF mediante verificación de sesión.
- *
- * Interacciones AJAX:
- * - Actualización de estados (entregado/pendiente).
- * - Marcado como devuelto/no devuelto.
- * - Edición de solicitudes existentes.
- * - Eliminación/cancelación de solicitudes.
- * - Envío de nuevas solicitudes.
- * - Operaciones masivas (entrega total/aprobación).
- *
- * Estructura visual:
- * - Diseño responsive con Bootstrap.
- * - Tarjetas con bordes naranjas para secciones principales.
- * - Sistema de colores para estados (verde=devuelto, rojo=perdido, etc.).
- * - Efectos visuales de tachado para items completados.
- * @package SAM Assistant
- * @versionh 1.0
- * @author Sistema SAM
- */
 
 require './../../layout/head.html';
 require './../../layout/header.php';
@@ -144,11 +49,6 @@ try {
     die("Error al obtener datos: " . $e->getMessage());
 }
 
-$rol = $_SESSION['rol'] ; // 8 = Voluntario por defecto
-
-error_log("Rol del usuario: " . $rol);
-$es_voluntario = ($rol == 8);
-$es_bodega = ($rol == 2);
 ?>
 
 <main class="container mt-4">
@@ -182,7 +82,6 @@ $es_bodega = ($rol == 2);
                         <tr id="row-<?php echo $solicitud['idsolicitud']; ?>">
                             <td>
                                 <div class="d-flex align-items-center">
-                                      <?php if (!$es_voluntario): ?> <!-- Solo mostrar botones si NO es voluntario -->
                                     <div class="form-check me-2">
                                         <input type="checkbox" 
                                                class="form-check-input visto-item" 
@@ -191,7 +90,7 @@ $es_bodega = ($rol == 2);
                                                <?php echo $solicitud['estado_entrega'] === 'Entregado' ? 'checked' : ''; ?>
                                                onchange="cambiarEstado(this, <?php echo $solicitud['estado_entrega'] === 'Entregado' ? 'false' : 'true'; ?>)">
                                     </div>
-                                         <?php endif; ?>
+                                         
                                     <label for="visto-<?php echo $solicitud['idsolicitud']; ?>" class="form-check-label mb-0">
                                         <?php echo htmlspecialchars($solicitud['nombreitem']); ?>
                                     </label>
@@ -244,9 +143,8 @@ $es_bodega = ($rol == 2);
                     <th style="text-align:center;">Cantidad</th>
                     <th style="text-align:center;">Fecha</th>
                     <th style="text-align:center;">Estado</th>
-                    <?php if (!$es_voluntario): ?> <!-- Solo mostrar columna Acciones si NO es voluntario -->
                     <th style="text-align:center;">Acciones</th>
-                    <?php endif; ?>
+                    
                 </tr>
             </thead>
             <tbody>
@@ -258,7 +156,7 @@ $es_bodega = ($rol == 2);
                         <tr id="prestado-<?php echo $item['idsolicitud']; ?>">
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <?php if (!$es_voluntario): ?>
+                                   
                                      
                                     <div class="form-check me-2">
                                         <input type="checkbox" 
@@ -268,7 +166,7 @@ $es_bodega = ($rol == 2);
                                                checked
                                                onchange="cambiarEstado(this, false)">
                                     </div>
-                                    <?php endif; ?>
+                                    
                                     <label for="visto-prestado-<?php echo $item['idsolicitud']; ?>" class="form-check-label mb-0">
                                         <?php echo htmlspecialchars($item['nombreitem']); ?>
                                     </label>
@@ -283,7 +181,6 @@ $es_bodega = ($rol == 2);
                             ?> estado-devolucion no-tachar">
                                 <?php echo htmlspecialchars($item['estado_devolucion'] ?? 'Entregado'); ?>
                             </td>
-                            <?php if (!$es_voluntario): ?> <!-- Solo mostrar acciones si NO es voluntario -->
                             <td style="text-align:center; white-space: nowrap;">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <button class="btn btn-sm btn-warning btn-editar-prestado" 
@@ -309,14 +206,14 @@ $es_bodega = ($rol == 2);
                                     </button>
                                 </div>
                             </td>
-                            <?php endif; ?>
+                            
                         </tr>
                     <?php endif; ?>
                 <?php endforeach; ?>
             </tbody>
         </table>
 
-        <?php if (!$es_voluntario): ?> <!-- Solo mostrar botones si NO es voluntario -->
+       
         <div class="text-end mt-3">
             <button id="btn-entrega-total" class="btn btn-success me-2">
                 <i class="bi bi-check-all"></i> Entrega Total
@@ -325,7 +222,7 @@ $es_bodega = ($rol == 2);
                 <i class="bi bi-check-circle"></i> Entrega Aprobado
             </button>
         </div>
-        <?php endif; ?>
+        
     </div>
 </div>
 
@@ -399,13 +296,12 @@ $es_bodega = ($rol == 2);
                                         title="Ver detalles">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <?php if (!$es_voluntario): ?> <!-- Solo mostrar botón de editar si NO es voluntario -->
                                 <button class="btn btn-sm btn-warning btn-editar-devolucion" 
                                         data-id="<?php echo $item['idsolicitud']; ?>"
                                         title="Cambiar estado">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </button>
-                                <?php endif; ?>
+                              
                             </td>
                         </tr>
                     <?php endif; ?>

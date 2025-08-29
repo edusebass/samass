@@ -1,77 +1,13 @@
 <?php
 /**
- * Obtener Datos de Solicitud - Endpoint para consulta de solicitudes individuales
+ * Obtener Datos de Solicitud - Versión adaptada para bodega.php y voluntario.php
  *
- * Descripción:
- * Servicio especializado en recuperar información detallada de solicitudes específicas
- * para operaciones de edición o visualización en el frontend.
- *
- * Funcionalidades clave:
- * - Consulta segura de datos de solicitud por ID
- * - Filtrado por propiedad (voluntarioid)
- * - Retorno estructurado en JSON
- * - Protección contra acceso no autorizado
- *
- * Campos devueltos:
- * - nombreitem: Nombre de la herramienta solicitada
- * - cantidad: Unidades requeridas
- * - observaciones: Notas adicionales
- *
- * Seguridad:
- * - Autenticación obligatoria via sesión
- * - Restricción por voluntario_id
- * - Método POST requerido
- * - Consultas preparadas
- * - Cabecera Content-Type: application/json
- *
- * Respuestas JSON:
- * - Éxito: 
- *   {
- *     "success": true,
- *     "data": {
- *       "nombreitem": "...",
- *       "cantidad": X,
- *       "observaciones": "..."
- *     }
- *   }
- * - Error: 
- *   {
- *     "success": false,
- *     "error": "Mensaje descriptivo"
- *   }
- *
- * Códigos de error comunes:
- * - "Solicitud inválida" (method/params incorrectos)
- * - "Solicitud no encontrada" (no existe/no pertenece)
- * - "Error en la base de datos" (excepciones PDO)
- *
- * Flujo de operación:
- * 1. Validar método POST y parámetro ID
- * 2. Verificar sesión activa
- * 3. Ejecutar consulta con doble filtro (ID + voluntario)
- * 4. Retornar datos o error correspondiente
- *
- * Integración:
- * - Usado principalmente en flujos de edición
- * - Consumido por:
- *   - Modales de edición
- *   - Paneles de detalle
- * - Complementa actualizar_solicitud.php
- *
- * Optimización:
- * - Selección explícita de columnas (no SELECT *)
- * - Fetch asociativo para estructura clara
- * - Manejo ligero de recursos
- *
- * Auditoría:
- * - Registro de errores via PDOException
- * - Validación de existencia antes de retorno
- *
- * Notas técnicas:
- * - No expone información sensible
- * - Campos devueltos coinciden con formularios de edición
- * - Estructura compatible con Swagger/OpenAPI
+ * Cambios principales:
+ * - Acepta voluntario_id desde POST (para bodega) o sesión (para voluntario)
+ * - Retorna datos estructurados consistentes
+ * - Mantiene seguridad con consultas preparadas
  */
+
 require_once './../../db/dbconn.php';
 require_once './../../utils/session_check.php';
 
@@ -79,29 +15,60 @@ header('Content-Type: application/json');
 
 $response = ['success' => false];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
-    try {
-        $stmt = $conn->prepare("SELECT * 
-                               FROM solicitudes_herramientas 
-                               WHERE idsolicitud = ? 
-                               AND voluntarioid = ?");
-        $stmt->execute([$_POST['id'], $_SESSION['user_id']]);
-        $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($solicitud) {
-            $response = [
-                'success' => true,
-                'data' => $solicitud
-            ];
-        } else {
-            $response['error'] = 'Solicitud no encontrada';
-        }
-    } catch(PDOException $e) {
-        $response['error'] = 'Error en la base de datos: ' . $e->getMessage();
-    }
-} else {
+// Validar método y parámetros
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id'])) {
     $response['error'] = 'Solicitud inválida';
+    echo json_encode($response);
+    exit;
+}
+
+// Obtener parámetros
+$id_solicitud = $_POST['id'];
+$voluntario_id = $_POST['voluntario_id'] ?? $_SESSION['user_id'] ?? '';
+$search_term = $_POST['search_term'] ?? '';
+
+try {
+    // Consulta preparada con selección explícita de campos
+    $stmt = $conn->prepare("SELECT 
+                           nombreitem, 
+                           cantidad, 
+                           observaciones,
+                           estado_entrega,
+                           estado_devolucion,
+                           DATE_FORMAT(fecha_solicitud, '%d/%m/%Y %H:%i') as fecha_solicitud_formateada,
+                           DATE_FORMAT(fecha_entregado, '%d/%m/%Y %H:%i') as fecha_entregado_formateada,
+                           DATE_FORMAT(fecha_recibido, '%d/%m/%Y %H:%i') as fecha_recibido_formateada
+                           FROM bodega_herramientas 
+                           WHERE idsolicitud = ? 
+                           AND voluntarioid = ?");
+    
+    $stmt->execute([$id_solicitud, $voluntario_id]);
+    $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($solicitud) {
+        $response = [
+            'success' => true,
+            'data' => [
+                'nombreitem' => $solicitud['nombreitem'],
+                'cantidad' => $solicitud['cantidad'],
+                'observaciones' => $solicitud['observaciones'] ?? '',
+                'estado_entrega' => $solicitud['estado_entrega'] ?? 'Pendiente',
+                'estado_devolucion' => $solicitud['estado_devolucion'] ?? '',
+                'fecha_solicitud' => $solicitud['fecha_solicitud_formateada'],
+                'fecha_entregado' => $solicitud['fecha_entregado_formateada'] ?? 'No entregado',
+                'fecha_recibido' => $solicitud['fecha_recibido_formateada'] ?? 'No recibido'
+            ],
+            'meta' => [
+                'id' => $id_solicitud,
+                'voluntario_id' => $voluntario_id
+            ]
+        ];
+    } else {
+        $response['error'] = 'Solicitud no encontrada o no tienes permisos';
+    }
+} catch(PDOException $e) {
+    error_log("Error en obtener_datos_solicitud.php: " . $e->getMessage());
+    $response['error'] = 'Error en la base de datos';
 }
 
 echo json_encode($response);
-?>

@@ -106,7 +106,7 @@ if (!function_exists('displayUsername')) {
         <div class="row p-0 m-0 align-center">
                 <div class="col-auto p-0">
   <a href="/src/utils/Redirect.php">
-    <img src="/public/ico/logo1.png" alt="Logo" class="img-fluid" style="height: 80px; width: 80px;">
+    <img src="/public/ico/logoSAM.svg" alt="Logo" class="img-fluid" style="height: 80px; width: 80px;">
   </a>
 </div>
             <div class="col p-0">

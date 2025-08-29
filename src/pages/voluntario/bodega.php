@@ -1,0 +1,1132 @@
+<?php
+
+require './../../layout/head.html';
+require './../../layout/header.php';
+require './../../utils/session_check.php';
+
+// Eliminamos la dependencia del user_id de sesión
+$search_term = $_GET['search'] ?? '';
+$voluntario_id = ''; // Ya no lo usamos de la sesión
+
+// Procesar cambio de estado (similar pero ahora requiere ID de voluntario)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
+    require_once './../../db/dbconn.php';
+    try {
+        $item_id = $_POST['item_id'];
+        $voluntario_id = $_POST['voluntario_id']; // Ahora viene del formulario
+        $nuevo_estado = $_POST['accion'] === 'marcar' ? 'Entregado' : 'Pendiente';
+        
+        $stmt = $conn->prepare("UPDATE bodega_herramientas 
+                              SET estado_entrega = ? 
+                              WHERE idsolicitud = ? 
+                              AND voluntarioid = ?");
+        $stmt->execute([$nuevo_estado, $item_id, $voluntario_id]);
+        
+        header("Location: bodega.php?search=" . urlencode($search_term));
+        exit();
+    } catch(PDOException $e) {
+        die("Error al actualizar estado: " . $e->getMessage());
+    }
+}
+
+require_once './../../db/dbconn.php';
+$todas_solicitudes = [];
+$voluntario_encontrado = null;
+
+try {
+    // Buscar voluntario por nombre o ID
+    if (!empty($search_term)) {
+        $stmt = $conn->prepare("SELECT voluntario, nome FROM user 
+                               WHERE nome LIKE ? OR voluntario LIKE ?
+                               LIMIT 1");
+        $stmt->execute(["%$search_term%", "%$search_term%"]);
+        $voluntario_encontrado = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($voluntario_encontrado) {
+            $voluntario_id = $voluntario_encontrado['voluntario'];
+            
+            // Obtenemos las solicitudes del voluntario encontrado
+            $stmt = $conn->prepare("SELECT sh.*, 
+                                   u.nome as nombre_voluntario,
+                                   DATE_FORMAT(sh.fecha_solicitud, '%d/%m %H:%i') as fecha_solicitud_formateada, 
+                                   DATE_FORMAT(sh.fecha_entregado, '%d/%m %H:%i') as fecha_entregado_formateada
+                                   FROM bodega_herramientas sh
+                                   LEFT JOIN user u ON sh.voluntarioid = u.voluntario
+                                   WHERE sh.voluntarioid = ? 
+                                   ORDER BY sh.fecha_solicitud DESC");
+            $stmt->execute([$voluntario_id]);
+            $todas_solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+} catch(PDOException $e) {
+    die("Error al obtener datos: " . $e->getMessage());
+}
+?>
+
+<main class="container mt-4">
+   
+<!-- Formulario de búsqueda -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card p-3 rounded-4" style="border: solid 2px #E4640D;">
+            <form id="form-busqueda" method="get" action="bodega.php">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" 
+                           placeholder="Buscar voluntario (nombre o ID)" 
+                           value="<?php echo htmlspecialchars($search_term); ?>">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <?php if ($voluntario_encontrado): ?>
+    <div class="col-md-6">
+        <div class="card p-3 rounded-4" style="border: solid 2px #E4640D;">
+            <h5>Voluntario seleccionado:</h5>
+            <p class="mb-1"><strong>ID:</strong> <?php echo htmlspecialchars($voluntario_encontrado['voluntario']); ?></p>
+            <p class="mb-0"><strong>Nombre:</strong> <?php echo htmlspecialchars($voluntario_encontrado['nome']); ?></p>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+
+<?php if (!empty($search_term) && !$voluntario_encontrado): ?>
+<div class="alert alert-warning">
+    No se encontró ningún voluntario con ese nombre o ID.
+</div>
+<?php endif; ?>
+
+<!-- Formulario oculto para manejar cambios (ahora incluye voluntario_id) -->
+<form id="form-estado" method="post" style="display: none;">
+    <input type="hidden" name="item_id" id="input-item-id">
+    <input type="hidden" name="accion" id="input-accion">
+    <input type="hidden" name="voluntario_id" id="input-voluntario-id" 
+           value="<?php echo htmlspecialchars($voluntario_id); ?>">
+</form>
+
+<?php if ($voluntario_encontrado): ?>
+<div class="row mt-4">
+   <!-- Columna 1: Todas las solicitudes (mostrando estado actual) -->
+<div class="col-md-6">
+    <h4>Solicitud de Herramientas</h4>
+
+    <div class="card p-3 rounded-4 w-100 d-block" style="border: solid 2px #E4640D;">
+        <?php if (!empty($todas_solicitudes)): ?>
+            <table id="tabla-solicitudes" class="table table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th style="text-align:center;">Cantidad</th>
+                        <th style="text-align:center;">Fecha/Hora</th>
+                        <th style="text-align:center;">Estado</th>
+                        <th style="text-align:center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($todas_solicitudes as $solicitud): ?>
+                             <?php if (empty($solicitud['estado_devolucion']) || !in_array($solicitud['estado_devolucion'], ['No devuelto', 'Perdido'])): ?>
+                        <tr id="row-<?php echo $solicitud['idsolicitud']; ?>">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check me-2">
+                                        <input type="checkbox" 
+                                               class="form-check-input visto-item" 
+                                               id="visto-<?php echo $solicitud['idsolicitud']; ?>"
+                                               data-id="<?php echo $solicitud['idsolicitud']; ?>"
+                                               <?php echo $solicitud['estado_entrega'] === 'Entregado' ? 'checked' : ''; ?>
+                                               onchange="cambiarEstado(this, <?php echo $solicitud['estado_entrega'] === 'Entregado' ? 'false' : 'true'; ?>)">
+                                    </div>
+                                         
+                                    <label for="visto-<?php echo $solicitud['idsolicitud']; ?>" class="form-check-label mb-0">
+                                        <?php echo htmlspecialchars($solicitud['nombreitem']); ?>
+                                    </label>
+                                </div>
+                                
+                            </td>
+                            <td style="text-align:center;"><?php echo htmlspecialchars($solicitud['cantidad']); ?></td>
+                            <td style="text-align:center;"><?php echo date('d/m H:i', strtotime($solicitud['fecha_solicitud'])); ?></td>
+                            <td style="text-align:center;"><?php echo htmlspecialchars($solicitud['estado_entrega'] ?? 'Pendiente'); ?></td>
+                          <td style="text-align:center; white-space: nowrap;">
+    <div class="d-flex gap-1 justify-content-center">
+        <?php if (!empty($solicitud['observaciones'])): ?>
+            <button class="btn btn-sm btn-info btn-ver-observaciones" 
+                    data-id="<?php echo $solicitud['idsolicitud']; ?>"
+                    data-observaciones="<?php echo htmlspecialchars($solicitud['observaciones']); ?>">
+                <i class="bi bi-eye"></i>
+            </button>
+        <?php endif; ?>
+        <button class="btn btn-sm btn-outline-secondary btn-tachar-item" 
+                data-id="<?php echo $solicitud['idsolicitud']; ?>">
+            <i class="bi bi-check2-square"></i>
+        </button>
+        <button class="btn btn-sm btn-danger btn-cancelar-solicitud" 
+                data-id="<?php echo $solicitud['idsolicitud']; ?>">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</td>
+                        </tr>
+                            <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p class="text-muted">No hay solicitudes registradas.</p>
+        <?php endif; ?>
+    </div>
+</div>
+
+
+<!-- Columna 2: Mismos items pero mostrando solo los marcados como Entregado -->
+<div class="col-md-6">
+    <h4>Lista de entrega de herramientas</h4>
+
+    <div class="card p-3 rounded-4 w-100 d-block" style="border: solid 2px #E4640D;">
+        <table id="tabla-prestados" class="table table-borderless align-middle">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th style="text-align:center;">Cantidad</th>
+                    <th style="text-align:center;">Fecha</th>
+                    <th style="text-align:center;">Estado</th>
+                    <th style="text-align:center;">Acciones</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($todas_solicitudes as $item): ?>
+                    <?php if ($item['estado_entrega'] === 'Entregado' && 
+                             (empty($item['estado_devolucion']) || 
+                              !in_array($item['estado_devolucion'], ['No devuelto', 'Perdido']))): ?>
+                        
+                        <tr id="prestado-<?php echo $item['idsolicitud']; ?>">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                   
+                                     
+                                    <div class="form-check me-2">
+                                        <input type="checkbox" 
+                                               class="form-check-input visto-item-prestado" 
+                                               id="visto-prestado-<?php echo $item['idsolicitud']; ?>"
+                                               data-id="<?php echo $item['idsolicitud']; ?>"
+                                               checked
+                                               onchange="cambiarEstado(this, false)">
+                                    </div>
+                                    
+                                    <label for="visto-prestado-<?php echo $item['idsolicitud']; ?>" class="form-check-label mb-0">
+                                        <?php echo htmlspecialchars($item['nombreitem']); ?>
+                                    </label>
+                                </div>
+                                 
+                            </td>
+                            <td style="text-align:center;"><?php echo htmlspecialchars($item['cantidad']); ?></td>
+                            <td style="text-align:center;"><?php echo !empty($item['fecha_entregado']) ? htmlspecialchars($item['fecha_entregado_formateada']) : htmlspecialchars($item['fecha_solicitud_formateada']); ?></td>
+                            <td style="text-align:center;" class="<?php 
+                                echo ($item['estado_devolucion'] === 'Devuelto') ? 'text-success' : 
+                                     (($item['estado_devolucion'] === 'No devuelto' || $item['estado_devolucion'] === 'Perdido') ? 'text-danger' : 'text-warning');
+                            ?> estado-devolucion no-tachar">
+                                <?php echo htmlspecialchars($item['estado_devolucion'] ?? 'Entregado'); ?>
+                            </td>
+                            <td style="text-align:center; white-space: nowrap;">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <button class="btn btn-sm btn-warning btn-editar-prestado" 
+                                            data-id="<?php echo $item['idsolicitud']; ?>"
+                                            title="Editar solicitud">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <?php if (!empty($item['observaciones'])): ?>
+                                        <button class="btn btn-sm btn-info btn-ver-observaciones" 
+                                                data-id="<?php echo $item['idsolicitud']; ?>"
+                                                data-observaciones="<?php echo htmlspecialchars($item['observaciones']); ?>">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                    <button class="btn btn-sm btn-outline-secondary btn-tachar-prestado" 
+                                            data-id="<?php echo $item['idsolicitud']; ?>"
+                                            data-tipo="prestado">
+                                        <i class="bi bi-check2-square"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger btn-cancelar-prestado" 
+                                            data-id="<?php echo $item['idsolicitud']; ?>">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            
+                        </tr>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+       
+        <div class="text-end mt-3">
+            <button id="btn-entrega-total" class="btn btn-success me-2">
+                <i class="bi bi-check-all"></i> Entrega Total
+            </button>
+            <button id="btn-entrega-aprobado" class="btn btn-danger">
+                <i class="bi bi-check-circle"></i> Entrega Aprobado
+            </button>
+        </div>
+        
+    </div>
+</div>
+
+
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>NUEVA SOLICITUD</h3>
+        <div class="card p-3 rounded-4 w-100 d-block" style="border: solid 2px #E4640D;">
+            <form id="form-solicitud" action="guardar_solicitud.php" method="post">
+                <input type="hidden" name="voluntarioid" value="<?php echo htmlspecialchars($voluntario_id); ?>">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="nombreitem" class="form-label">Nombre del Item</label>
+                            <input type="text" class="form-control" id="nombreitem" name="nombreitem" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" id="cantidad" name="cantidad" min="1" value="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <input type="text" class="form-control" id="observaciones" name="observaciones">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Añadir Solicitud
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Columna 3: Herramientas no entregadas - Versión simplificada -->
+<div class="col-md-12 mt-4">
+    <h4>Herramientas No Entregadas</h4>
+    <div class="table-responsive">
+        <table id="tabla-no-entregadas" class="table table-bordered">
+            <thead class="">
+                <tr>
+                    <th style="text-align: center;">Fecha</th>
+                    <th>Herramienta no entregada</th>
+                    <th style="text-align: center;">¿A quién se entregó?</th>
+                    <th style="text-align: center;">Devuelto</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($todas_solicitudes as $item): ?>
+                    <?php if (!empty($item['estado_devolucion']) && in_array($item['estado_devolucion'], ['No devuelto', 'Perdido'])): ?>
+                        <tr id="no-entregado-<?php echo $item['idsolicitud']; ?>">
+                            <td style="text-align: center;">
+                                <?php echo !empty($item['fecha_entregado']) ? htmlspecialchars($item['fecha_entregado_formateada']) : htmlspecialchars($item['fecha_solicitud_formateada']); ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($item['nombreitem']); ?></td>
+                            <td style="text-align: center;"><?php echo htmlspecialchars($item['nombre_voluntario'] ?? $item['voluntarioid']); ?></td>
+                            <td style="text-align: center;" class="<?php 
+                                echo $item['estado_devolucion'] === 'Perdido' ? 'text-danger' : 'text-warning';
+                            ?>">
+                                <?php echo htmlspecialchars($item['estado_devolucion']); ?>
+                            </td>
+                            <td style="text-align: center;">
+                                <button class="btn btn-sm btn-info btn-ver-detalles" 
+                                        data-id="<?php echo $item['idsolicitud']; ?>"
+                                        title="Ver detalles">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning btn-editar-devolucion" 
+                                        data-id="<?php echo $item['idsolicitud']; ?>"
+                                        title="Cambiar estado">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                              
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<?php endif; ?>
+</main>
+
+<style>
+     /* ===== ESTILOS GENERALES DE LA TABLA ===== */
+    #tabla-no-entregadas {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse; /* Bordes unificados */
+        margin-bottom: 1rem;
+        background-color: white; /* Fondo general */
+    }
+
+    /* ===== CABECERA (TH) ===== */
+    #tabla-no-entregadas thead th {
+        background-color: white !important; /* Fondo blanco */
+        border: 1px solidrgb(224, 183, 47) !important; /* Borde gris claro (mismo que las celdas) */
+        padding: 10px 12px;
+        text-align: center;
+        font-weight: 600; /* Negrita para títulos */
+        color: #495057; /* Color de texto oscuro */
+        white-space: nowrap; /* Evita saltos de línea */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Puntos suspensivos si el texto es largo */
+    }
+
+    /* ===== CELDAS (TD) ===== */
+    #tabla-no-entregadas td {
+        border: 1px solidrgb(204, 134, 43); /* Mismo borde que los títulos */
+        padding: 8px 12px;
+        word-wrap: break-word; /* Ajusta texto largo */
+        vertical-align: middle;
+        background-color: white; /* Fondo blanco */
+    }
+
+    /* ===== AJUSTES DE COLUMNAS ===== */
+    #tabla-no-entregadas th:nth-child(1), 
+    #tabla-no-entregadas td:nth-child(1) {
+        width: 15%; /* Fecha */
+    }
+
+    #tabla-no-entregadas th:nth-child(2), 
+    #tabla-no-entregadas td:nth-child(2) {
+        width: 25%; /* Herramienta */
+    }
+
+    #tabla-no-entregadas th:nth-child(3), 
+    #tabla-no-entregadas td:nth-child(3) {
+        width: 30%; /* ¿A quién se entregó? */
+        min-width: 180px; /* Ancho mínimo garantizado */
+    }
+
+    #tabla-no-entregadas th:nth-child(4), 
+    #tabla-no-entregadas td:nth-child(4) {
+        width: 15%; /* Estado */
+    }
+
+    #tabla-no-entregadas th:nth-child(5), 
+    #tabla-no-entregadas td:nth-child(5) {
+        width: 15%; /* Acciones */
+    }
+
+    /* ===== COLORES DE ESTADO ===== */
+    #tabla-no-entregadas .text-danger {
+        color: #dc3545 !important; /* Rojo para "Perdido" */
+    }
+    #tabla-no-entregadas .text-warning {
+        color: #ffc107 !important; /* Amarillo para "No devuelto" */
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        #tabla-no-entregadas th:nth-child(3), 
+        #tabla-no-entregadas td:nth-child(3) {
+            min-width: 150px; /* Ajuste para móviles */
+        }
+    }
+
+    /* ===== BOTONES ===== */
+    #tabla-no-entregadas .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    /* Tachado solo para celdas específicas, excluyendo .no-tachar */
+    .tachado > td:not(.no-tachar),
+    .tachado > td:not(.no-tachar) > div,
+    .tachado > td:not(.no-tachar) > div > label {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+    
+    /* Estado - nunca se tacha */
+    .no-tachar,
+    .no-tachar * {
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+    
+    .btn-tachar-item.active, .btn-tachar-prestado.active {
+        background-color: #28a745 !important;
+        color: white !important;
+        border-color: #28a745 !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Obtener el término de búsqueda actual
+    const searchTerm = new URLSearchParams(window.location.search).get('search') || '';
+    
+    // Función para recargar manteniendo la búsqueda
+    function reloadWithSearch() {
+        window.location.href = `bodega.php?search=${encodeURIComponent(searchTerm)}`;
+    }
+    
+ // Función para mover item a prestados
+function marcarComoPrestado(id) {
+    const voluntario_id = $('#input-voluntario-id').val();
+    
+    $.ajax({
+        url: 'marcar_prestado.php',
+        type: 'POST',
+        data: { 
+            id: id, 
+            estado: 'Entregado',
+            voluntario_id: voluntario_id
+        },
+        success: function(response) {
+            // Ocultar el botón de eliminar en la fila original
+            $('#row-'+id).find('.btn-cancelar-solicitud').hide();
+            
+            // Resto del código existente...
+            var fila = $('#row-'+id).clone();
+            fila.attr('id', 'prestado-'+id);
+            
+            // Cambiar el checkbox
+            fila.find('.visto-item')
+                .removeClass('visto-item')
+                .addClass('visto-item-prestado')
+                .attr('id', 'visto-prestado-'+id)
+                .prop('checked', true);
+            
+            fila.find('label').attr('for', 'visto-prestado-'+id);
+            
+            // Cambiar formato de fecha
+            var horaCell = fila.find('td:eq(2)');
+            var fechaOriginal = horaCell.text().trim();
+            var fechaActual = new Date();
+            horaCell.text(fechaActual.getDate() + '/' + (fechaActual.getMonth()+1) + ' ' + fechaOriginal);
+            
+            // Cambiar estado
+            fila.find('td:eq(3)').text('Entregado');
+            
+            // Cambiar botones - asegurarse de que el botón de eliminar no esté visible
+            fila.find('.btn-cancelar-solicitud').remove();
+            
+            // Agregar a tabla de prestados
+            $('#tabla-prestados tbody').prepend(fila);
+            
+            // No eliminar la fila original, solo ocultar el botón
+            // $('#row-'+id).remove();
+            
+            // Si no quedan items visibles, mostrar mensaje
+            if ($('#tabla-solicitudes tbody tr:visible').length === 0) {
+                $('#tabla-solicitudes tbody').html('<tr><td colspan="5" class="text-muted">No hay solicitudes registradas.</td></tr>');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error', 'No se pudo marcar como prestado', 'error');
+            $('#visto-'+id).prop('checked', false);
+        }
+    });
+}
+
+// Función para quitar de prestados
+function quitarDePrestados(id) {
+    const voluntario_id = $('#input-voluntario-id').val();
+    
+    $.ajax({
+        url: 'marcar_prestado.php',
+        type: 'POST',
+        data: { 
+            id: id, 
+            estado: 'Pendiente',
+            voluntario_id: voluntario_id
+        },
+        success: function(response) {
+            // Mostrar el botón de eliminar en la fila original
+            $('#row-'+id).find('.btn-cancelar-solicitud').show();
+            
+            // Eliminar de tabla de prestados
+            $('#prestado-'+id).remove();
+            
+            // Si no quedan items en prestados, mostrar mensaje
+            if ($('#tabla-prestados tbody tr').length === 0) {
+                $('#tabla-prestados tbody').html('<tr><td colspan="5" class="text-muted">No hay items prestados actualmente.</td></tr>');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error', 'No se pudo actualizar el estado', 'error');
+            $('#visto-prestado-'+id).prop('checked', true);
+        }
+    });
+}
+// Manejar checkbox de visto en solicitudes
+$('body').on('change', '.visto-item', function() {
+    var id = $(this).data('id');
+    var isChecked = $(this).is(':checked');
+    
+    if (isChecked) {
+        // Ocultar el botón de eliminar inmediatamente
+        $('#row-'+id).find('.btn-cancelar-solicitud').hide();
+        marcarComoPrestado(id);
+    } else {
+        // Mostrar el botón de eliminar inmediatamente
+        $('#row-'+id).find('.btn-cancelar-solicitud').show();
+        quitarDePrestados(id);
+    }
+});
+    // Manejar checkbox de visto en items prestados
+    $('body').on('change', '.visto-item-prestado', function() {
+        var id = $(this).data('id');
+        var isChecked = $(this).is(':checked');
+        
+        if (!isChecked) {
+            quitarDePrestados(id);
+        } else {
+            $(this).prop('checked', true);
+        }
+    });
+
+    // Inicializar botones de tachado según el estado de las cookies
+    $('.btn-tachar-item').each(function() {
+        const id = $(this).data('id');
+        if (document.cookie.includes('tachado_'+id)) {
+            $(this).addClass('active').attr('title', 'Des-tachar');
+        }
+    });
+
+    // Manejar tachado/des-tachado de items
+    $('.btn-tachar-item').click(function() {
+        const id = $(this).data('id');
+        const row = $('#row-'+id);
+        const isTachado = row.hasClass('tachado');
+        
+        if (isTachado) {
+            row.removeClass('tachado');
+            $(this).removeClass('active').attr('title', 'Tachar');
+            document.cookie = `tachado_${id}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        } else {
+            row.addClass('tachado');
+            $(this).addClass('active').attr('title', 'Des-tachar');
+            document.cookie = `tachado_${id}=1; expires=${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString()}; path=/;`;
+        }
+    });
+
+    // Manejar "Entrega Total"
+    $('#btn-entrega-total').click(function() {
+        const voluntario_id = $('#input-voluntario-id').val();
+        
+        Swal.fire({
+            title: '¿Marcar todos como devueltos?',
+            text: 'Esta acción actualizará el estado de todos los items a "Devuelto"',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, confirmar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'marcar_todos_devueltos.php',
+                    type: 'POST',
+                    data: { 
+                        voluntario_id: voluntario_id,
+                        search_term: searchTerm
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#tabla-prestados tbody tr').each(function() {
+                                const id = $(this).attr('id').replace('prestado-', '');
+                                $(this).addClass('tachado');
+                                $(this).find('.estado-devolucion')
+                                    .text('Devuelto')
+                                    .removeClass('text-warning text-danger')
+                                    .addClass('text-success');
+                                document.cookie = `tachado_prestado_${id}=1; max-age=2592000; path=/`;
+                            });
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Listo!',
+                                text: 'Todos los items fueron marcados como devueltos',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(reloadWithSearch);
+                        } else {
+                            Swal.fire('Error', response.error || 'Error al actualizar', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error', 'Error de conexión', 'error');
+                    }
+                });
+            }
+        });
+    });
+
+    // Aplicar tachado según cookies al cargar
+    $('#tabla-prestados tbody tr').each(function() {
+        const id = $(this).attr('id').replace('prestado-', '');
+        if (document.cookie.includes(`tachado_prestado_${id}`)) {
+            $(this).addClass('tachado');
+            $(this).find('.btn-tachar-prestado').addClass('active').attr('title', 'Des-tachar');
+        }
+    });
+
+    // Manejar tachado en tabla de prestados
+    $('#tabla-prestados').on('click', '.btn-tachar-prestado', function() {
+        const id = $(this).data('id');
+        const voluntario_id = $('#input-voluntario-id').val();
+        const row = $('#prestado-'+id);
+        const isTachado = row.hasClass('tachado');
+        const btnTachar = $(this);
+        
+        const nuevoEstado = isTachado ? 'Entregado' : 'Devuelto';
+        
+        $.ajax({
+            url: 'actualizar_devolucion.php',
+            type: 'POST',
+            data: { 
+                id: id,
+                estado: nuevoEstado,
+                voluntario_id: voluntario_id,
+                search_term: searchTerm
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    if (isTachado) {
+                        row.removeClass('tachado');
+                        btnTachar.removeClass('active').attr('title', 'Tachar');
+                        document.cookie = `tachado_prestado_${id}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                        row.find('.estado-devolucion').text('Entregado').removeClass('text-success').addClass('text-warning');
+                    } else {
+                        row.addClass('tachado');
+                        btnTachar.addClass('active').attr('title', 'Des-tachar');
+                        document.cookie = `tachado_prestado_${id}=1; expires=${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString()}; path=/;`;
+                        row.find('.estado-devolucion').text('Devuelto').removeClass('text-warning').addClass('text-success');
+                    }
+                }
+            }
+        });
+    });
+
+    // Manejar cancelación de solicitud
+    $('body').on('click', '.btn-cancelar-solicitud', function() {
+        const id = $(this).data('id');
+        
+        Swal.fire({
+            title: '¿Cancelar solicitud?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `cancelar_solicitud.php?id=${id}&search=${encodeURIComponent(searchTerm)}`;
+            }
+        });
+    });
+
+    // Manejar "Entrega Aprobado"
+    $('#btn-entrega-aprobado').click(function() {
+        const voluntario_id = $('#input-voluntario-id').val();
+        const todosTachados = $('#tabla-prestados tbody tr').length > 0 && 
+                             $('#tabla-prestados tbody tr').toArray().every(tr => $(tr).hasClass('tachado'));
+        
+        if (!todosTachados) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Verificación requerida',
+                html: 'Debes tachar <strong>TODOS</strong> los items como entregados antes de aprobar la entrega.<br><br>' +
+                      'Por favor, verifica que todos los items en la lista estén marcados como entregados.',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Confirmar entrega aprobada?',
+            text: 'Esta acción eliminará TODOS los items prestados de la lista',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, aprobar entrega',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'eliminar_todos_prestados.php',
+                    type: 'POST',
+                    data: { 
+                        confirmar: true,
+                        voluntario_id: voluntario_id,
+                        search_term: searchTerm
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Entrega aprobada',
+                            text: 'Todos los items prestados han sido eliminados',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(reloadWithSearch);
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseText || 'Ocurrió un error al eliminar los items'
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Manejar devolución no entregada
+   // Manejar devolución no entregada
+$('#tabla-prestados').on('click', '.btn-cancelar-prestado', function() {
+    const id = $(this).data('id');
+    const voluntario_id = $('#input-voluntario-id').val();
+    const searchTerm = new URLSearchParams(window.location.search).get('search') || '';
+
+    Swal.fire({
+        title: 'Confirmar acción',
+        html: `¿Marcar el item como <strong>No devuelto</strong>?<br><br>
+              <small>Esta acción moverá el item a la lista de herramientas no entregadas</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, marcar',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            return fetch('marcar_no_devuelto.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    id: id,
+                    voluntario_id: voluntario_id,
+                    search_term: searchTerm
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                return response.json();
+            })
+            .catch(error => {
+                Swal.showValidationMessage(
+                    `Error: ${error}`
+                );
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (result.value.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Actualizado!',
+                    text: 'El estado fue cambiado a "No devuelto"',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = `bodega.php?search=${encodeURIComponent(searchTerm)}`;
+                });
+            } else {
+                Swal.fire('Error', result.value.error || 'Error desconocido', 'error');
+            }
+        }
+    });
+});
+    // Manejar edición de items prestados
+   // Manejar edición de items prestados
+$('#tabla-prestados').on('click', '.btn-editar-prestado', function() {
+    const id = $(this).data('id');
+    const voluntario_id = $('#input-voluntario-id').val();
+    
+    // Obtener los datos directamente de la fila en lugar de hacer una petición AJAX
+    const row = $('#prestado-'+id);
+    const nombreitem = row.find('td:eq(0) label').text().trim();
+    const cantidad = row.find('td:eq(1)').text().trim();
+    const observaciones = $(this).siblings('.btn-ver-observaciones').data('observaciones') || '';
+    
+    Swal.fire({
+        title: 'Editar Solicitud',
+        html: `
+            <form id="form-editar-solicitud">
+                <input type="hidden" name="idsolicitud" value="${id}">
+                <input type="hidden" name="voluntario_id" value="${voluntario_id}">
+                <div class="mb-3">
+                    <label class="form-label">Nombre del Item</label>
+                    <input type="text" class="form-control" name="nombreitem" value="${nombreitem}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" name="cantidad" min="1" value="${cantidad}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" name="observaciones">${observaciones}</textarea>
+                </div>
+            </form>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar Cambios',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            return {
+                nombreitem: $('.swal2-modal input[name="nombreitem"]').val(),
+                cantidad: $('.swal2-modal input[name="cantidad"]').val(),
+                observaciones: $('.swal2-modal textarea[name="observaciones"]').val()
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formData = $('#form-editar-solicitud').serialize() + 
+                           `&search_term=${encodeURIComponent(searchTerm)}`;
+            
+            $.ajax({
+                url: 'actualizar_solicitud.php',
+                type: 'POST',
+                data: formData,
+                success: function(updateResponse) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Solicitud actualizada',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(reloadWithSearch);
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseText || 'Ocurrió un error al actualizar', 'error');
+                }
+            });
+        }
+    });
+});
+
+    // Manejar cambio de estado de devolución
+    $('#tabla-no-entregadas').on('click', '.btn-editar-devolucion', function() {
+        const id = $(this).data('id');
+        const voluntario_id = $('#input-voluntario-id').val();
+        const row = $('#no-entregado-'+id);
+        const btn = $(this);
+        
+        Swal.fire({
+            title: 'Cambiar estado de devolución',
+            text: 'Selecciona el nuevo estado para este item',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            cancelButtonText: 'Cancelar',
+            input: 'select',
+            inputOptions: {
+                'No devuelto': 'No devuelto',
+                'Devuelto': 'Devuelto',
+                'Perdido': 'Perdido'
+            },
+            inputValue: row.find('td:eq(3)').text().trim(),
+            inputPlaceholder: 'Selecciona un estado',
+            inputValidator: (value) => !value ? 'Debes seleccionar un estado' : null
+        }).then((result) => {
+            if (result.isConfirmed) {
+                btn.prop('disabled', true);
+                
+                $.ajax({
+                    url: 'actualizar_devolucion.php',
+                    type: 'POST',
+                    data: {
+                        id: id,
+                        estado: result.value,
+                        voluntario_id: voluntario_id,
+                        search_term: searchTerm
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            const celdaEstado = row.find('td:eq(3)');
+                            celdaEstado.text(result.value)
+                                .removeClass('text-danger text-warning text-success');
+                            
+                            if (result.value === 'Devuelto') {
+                                celdaEstado.addClass('text-success');
+                                reloadWithSearch();
+                            } else if (result.value === 'Perdido') {
+                                celdaEstado.addClass('text-danger');
+                            } else {
+                                celdaEstado.addClass('text-warning');
+                            }
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Estado actualizado',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire('Error', response.error || 'No se pudo actualizar', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error', 'Error al comunicarse con el servidor', 'error');
+                    },
+                    complete: () => btn.prop('disabled', false)
+                });
+            }
+        });
+    });
+
+    // Manejar visualización de observaciones
+    $('body').on('click', '.btn-ver-observaciones', function() {
+        const observaciones = $(this).data('observaciones');
+        
+        Swal.fire({
+            title: 'Observaciones',
+            html: `<div class="text-start p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                      <p>${observaciones.replace(/\n/g, '<br>')}</p>
+                   </div>`,
+            confirmButtonText: 'Cerrar',
+            width: '600px'
+        });
+    });
+
+    // Manejar envío del formulario de nueva solicitud
+    $('#form-solicitud').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: $(this).serialize() + `&search_term=${encodeURIComponent(searchTerm)}`,
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Solicitud registrada',
+                    text: 'El item ha sido añadido a la solicitud',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(reloadWithSearch);
+            },
+            error: function(xhr) {
+                Swal.fire('Error', xhr.responseText || 'Ocurrió un error al guardar', 'error');
+            }
+        });
+    });
+
+    // Manejar visualización de detalles
+    $('#tabla-no-entregadas').on('click', '.btn-ver-detalles', function() {
+        const id = $(this).data('id');
+        const voluntario_id = $('#input-voluntario-id').val();
+        
+        $.ajax({
+            url: 'obtener_datos_solicitud.php',
+            type: 'POST',
+            data: { 
+                id: id,
+                voluntario_id: voluntario_id,
+                search_term: searchTerm
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    const fechaSolicitud = new Date(response.data.fecha_solicitud).toLocaleString();
+                    const fechaEntregado = response.data.fecha_entregado ? 
+                        new Date(response.data.fecha_entregado).toLocaleString() : 'No entregado';
+                    const fechaRecibido = response.data.fecha_recibido ? 
+                        new Date(response.data.fecha_recibido).toLocaleString() : 'No recibido';
+                    
+                    Swal.fire({
+                        title: 'Detalles completos',
+                        html: `
+                            <div class="text-start">
+                                <p><strong>Herramienta:</strong> ${response.data.nombreitem}</p>
+                                <p><strong>Cantidad:</strong> ${response.data.cantidad}</p>
+                                <p><strong>Fecha de solicitud:</strong> ${fechaSolicitud}</p>
+                                <p><strong>Fecha de entrega:</strong> ${fechaEntregado}</p>
+                                <p><strong>Fecha de recepción:</strong> ${fechaRecibido}</p>
+                                <p><strong>Estado de entrega:</strong> ${response.data.estado_entrega || 'No especificado'}</p>
+                                <p><strong>Estado de devolución:</strong> ${response.data.estado_devolucion || 'No especificado'}</p>
+                                <p><strong>Observaciones:</strong> ${response.data.observaciones || 'Ninguna'}</p>
+                            </div>
+                        `,
+                        confirmButtonText: 'Cerrar',
+                        width: '700px'
+                    });
+                } else {
+                    Swal.fire('Error', response.error || 'No se pudieron obtener los detalles', 'error');
+                }
+            },
+            error: function(xhr) {
+                Swal.fire('Error', 'Error al comunicarse con el servidor', 'error');
+            }
+        });
+    });
+});
+
+// Función para manejar el cambio de estado
+function cambiarEstado(checkbox, esMarcado) {
+    const id = checkbox.dataset.id;
+    const voluntario_id = document.getElementById('input-voluntario-id').value;
+    const searchTerm = new URLSearchParams(window.location.search).get('search') || '';
+    
+    // Guardar estado antes de recargar
+    localStorage.setItem('checkbox_'+id, esMarcado);
+
+    $.ajax({
+        url: 'actualizar_estados.php',
+        type: 'POST',
+        data: {
+            item_id: id,
+            accion: esMarcado ? 'marcar' : 'desmarcar',
+            voluntario_id: voluntario_id,
+            search_term: searchTerm
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                window.location.href = `bodega.php?search=${encodeURIComponent(searchTerm)}`;
+            } else {
+                Swal.fire('Error', response.error || 'Error al actualizar estado', 'error');
+                checkbox.checked = !checkbox.checked;
+                localStorage.removeItem('checkbox_'+id);
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error', 'Error de conexión', 'error');
+            checkbox.checked = !checkbox.checked;
+            localStorage.removeItem('checkbox_'+id);
+        }
+    });
+}
+
+// Al cargar la página, verificar estados guardados
+$(document).ready(function() {
+    $('.visto-item').each(function() {
+        const id = $(this).data('id');
+        const isChecked = localStorage.getItem('checkbox_'+id) === 'true';
+        if (isChecked) {
+            $('#row-'+id).find('.btn-cancelar-solicitud').hide();
+        }
+    });
+});
+</script>
+<!-- En el head o antes de los scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?php require './../../layout/footer.htm'; ?>
